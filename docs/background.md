@@ -33,9 +33,9 @@ can potentially result in different preference for "how" the Catalog is updated.
 
 Boiling that down into an agile story description:
 
-As a platform/MLOPs engineer, I want to administrate the Backstage Catalog from the command line so that I can better automate administration of Backstage for AI related application development.
+As a Platform or MLOPs engineer, I want to administrate the Backstage Catalog from the command line so that I can better automate administration of Backstage for AI related application development.
 
-As a developer/tester engineer, I want to administrate the Backstage Catalog from the command line so that I can better automate verification pipelines for testing of Backstage’s AI related features.
+As a DevOps engineer, I want to administrate the Backstage Catalog from the command line so that I can better automate verification pipelines for testing of Backstage’s AI related features.
 
 ## Syntax
 

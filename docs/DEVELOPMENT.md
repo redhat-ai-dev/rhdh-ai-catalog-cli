@@ -9,7 +9,7 @@ Otherwise, `make` is employed.  And of course `git`.
 
 ## Build
 
-To simply build the `rac` binary:
+To simply build the `bac` binary:
 ```shell
 make build
 ```
@@ -19,13 +19,13 @@ To build the binary with a `kubectl-` prefix to enable basic [kubectl plugin sup
 make kubectl
 ```
 
-To install the `rac` binary to a directory in your execution path (default is `/usr/local/bin` but can be changed with the
+To install the `bac` binary to a directory in your execution path (default is `/usr/local/bin` but can be changed with the
 `INSTALL_LOCATION` environment variable):
 ```shell
 make install
 ```
 
-And similarly, to install the `kubectl-rac` binary:
+And similarly, to install the `kubectl-bac` binary:
 ```shell
 make kubectl-install
 ```

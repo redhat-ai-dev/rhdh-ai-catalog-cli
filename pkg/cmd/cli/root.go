@@ -15,16 +15,33 @@ import (
 
 const (
 	bkstgAIExample = `
-# Access a supported backend for AI Model metadata and generate Backstage Catalog Entity YAML for that metadata
+# The 'new-model' command will access a supported backend for AI Model metadata: 
+# - kserve, for inspecting active Kserve Inferences Services in a Kubernetes cluster
+# - kubeflow, for querying a Kubeflow Model Registry instance for Model information
+# 
+# and from the data retrieved from those sources, produce YAML formatted output that corresponds
+# to the Backstage catalog entities:
+# - Components
+# - Resources
+# - APIs
+# 
+# After possibly reviewing the output to the screen, the user will (re)run the command and redirect it
+# to a 'catalog-info.yaml' file and push the contents of that file to an HTTP accessible location (most likely
+# a Git repository.  Afterward, use if 'import-model' will complete the creation flow.
 $ %s new-model <kserve|kubeflow> <owner> <lifecycle> <args...>
 
-# Access the Backstage Catalog for Entities related to AI Models
-$ %s get [location|components|resources|apis] [args...]
-
-# Import from an accessible URL Backstage Catalog entities
+# The 'import-model' command takes the 'catalog-info.yaml' file produced by 'new-model', and stored in an HTTP accessible 
+# location (where the <url> parameter is the retrieval address for the file), and imports the contents of the 
+# 'catalog-info.yaml' file into the Catalog of a running Backstage instance.
 $ %s import-model <url>
 
-# Remove from the Backstage Catalog the Location entity for the provided Location ID.
+# The 'get' command allows for the retrieval of YAML formatted representations of various entities from the Backstage Catalog.
+$ %s get [location|components|resources|apis|entities] [args...]
+
+# The 'delete-model' command will remove the Backstage Catalog Location entity for the provided Location ID, which in turn
+# will remove any Components, Resources, or APIs imported from that location.  The <location id> is a generated key that
+# is associated with the URL provided when the user runs the 'import-model' command.  You also can see this ID when you
+# view the locations from the Backstage UI.
 $ %s delete-model <location id>
 `
 
@@ -173,7 +190,7 @@ func NewCmd() *cobra.Command {
 	newModel := &cobra.Command{
 		Use:     "new-model",
 		Long:    "new-model accesses one of the supported backends and builds Backstage Catalog Entity YAML with available Model metadata",
-		Aliases: []string{"create", "c", "nm", "new-models"},
+		Aliases: []string{"create", "c", "nm", "new-models", "export-model"},
 		Example: strings.ReplaceAll(newModelExample, "%s", util.ApplicationName),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()

@@ -13,7 +13,7 @@ type listAPIs struct {
 }
 
 func (b *BackstageRESTClientWrapper) ListAPIs(args ...string) (string, error) {
-	qparms := updateQParams("api", API_TYPE, args)
+	qparms := updateQParams("api", OPENAPI_API_TYPE, args)
 
 	str, err := b.getWithKindParamFromBackstage(b.RootURL+QUERY_URI, qparms)
 	if err != nil {

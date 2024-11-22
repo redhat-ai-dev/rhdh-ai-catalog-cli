@@ -4,20 +4,22 @@
 
 These updates are more along the lines of general usability
 
-| idea                            | description                                                | tracker | status        |
-|---------------------------------|------------------------------------------------------------|---------|---------------|
-| config file                     | capture connection and global parameters for reuse         |         | unimplemented |
-| entity field configmap          | with new-model, allow for field overrides from configmap   |         | unimplemented |
-| backstage cert/token cm/secret  | store/retrieve cert and token for backstage                |         | unimplemented |
-| third part cert/token cm/secret | store/retrieve cert and token for third party              |         | unimplemented |
-| backstage cert flag             | file/env var for backstage cert                            |         | unimplemented |
-| third party cert flag           | file/env var for third party cer                           |         | unimplemented |
-| entity field local file         | with new-mode, allow for field overrides from file         |         | unimplemented |
-| fetch URLs from routes/ingress  | when backstage,third party running on K8s, find URL        |         | unimplemented |
-| flags for output                | allow for output summary vs. json vs. yaml etc.            |         | unimplemented |
-| flags for output files          | new-model store Components/Resources/API in separate files |         | unimplemented |
-| flags for field overrides       | new-model provide field values via command line flags      |         | unimplemented |
-| release process                 | initially github action/goreleaser; eventually konflux     |         | unimplemented |
+| idea                            | description                                                    | tracker | status        |
+|---------------------------------|----------------------------------------------------------------|---------|---------------|
+| config file                     | capture connection and global parameters for reuse             |         | unimplemented |
+| entity field configmap          | with new-model, allow for field overrides from configmap       |         | unimplemented |
+| backstage cert/token cm/secret  | store/retrieve cert and token for backstage                    |         | unimplemented |
+| third part cert/token cm/secret | store/retrieve cert and token for third party                  |         | unimplemented |
+| backstage cert flag             | file/env var for backstage cert                                |         | unimplemented |
+| third party cert flag           | file/env var for third party cer                               |         | unimplemented |
+| entity field local file         | with new-mode, allow for field overrides from file             |         | unimplemented |
+| fetch URLs from routes/ingress  | when backstage,third party running on K8s, find URL            |         | unimplemented |
+| flags for output                | allow for output summary vs. json vs. yaml etc.                |         | unimplemented |
+| flags for output files          | new-model store Components/Resources/API in separate files     |         | unimplemented |
+| flags for field overrides       | new-model provide field values via command line flags          |         | unimplemented |
+| release process                 | initially github action/goreleaser; eventually konflux         |         | unimplemented |
+| e2e tests                       | running against "live" data somehow                            |         | unimplemented |
+| filter api queries for "ai"     | with no unique spec.type for API either state no filter of fix |         | unimplemented |
 
 ## Upstream Backstage
 

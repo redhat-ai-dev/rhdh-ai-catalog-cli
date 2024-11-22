@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	serverapiv1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
-	serverapiv1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -23,10 +23,11 @@ const (
 # API Entities from the data.
 $ %s new-model kserve <owner> <lifecycle> <args...>
 
-# This will set the URL, Token, and Skip TLS when accessing the cluster for InferenceService instances 
+# This example shows the flags that will set the URL, Token, and Skip TLS when accessing the cluster for InferenceService instances 
 $ %s new-model kserve <owner> <lifecycle> --model-metadata-url=https://my-kubeflow.com --model-metadata-token=my-token --model-metadata-skip-tls=true
 
-# This will set the Kubeconfig file to use when accessing the cluster for InferenceService instances
+# The '--kubeconfig' flag can be used to set the location of the configuration file used for accessing the credentials
+# used for interacting with the Kubernetes cluster.
 $ %s new-model kserve <owner> <lifecycle> --kubeconfig=/home/myid/my-kube.json
 
 # This form will pull in only the InferenceService instances with the names 'inferenceservice1' and 'inferenceservice2'
@@ -180,7 +181,7 @@ func (pop *componentPopulator) GetTechdocRef() string {
 }
 
 func (pop *componentPopulator) GetDisplayName() string {
-	return fmt.Sprintf("The %s model server", pop.GetName())
+	return pop.GetName()
 }
 
 type resourcePopulator struct {
@@ -196,7 +197,7 @@ func (pop *resourcePopulator) GetTechdocRef() string {
 }
 
 func (pop *resourcePopulator) GetDisplayName() string {
-	return fmt.Sprintf("The %s ai model", pop.GetName())
+	return pop.GetName()
 }
 
 type apiPopulator struct {
@@ -222,7 +223,7 @@ func (pop *apiPopulator) GetTechdocRef() string {
 }
 
 func (pop *apiPopulator) GetDisplayName() string {
-	return fmt.Sprintf("The %s openapi", pop.GetName())
+	return pop.GetName()
 }
 
 func SetupKServeClient(cfg *config.Config) {

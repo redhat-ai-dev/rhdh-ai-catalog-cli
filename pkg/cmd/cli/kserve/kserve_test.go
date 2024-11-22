@@ -340,7 +340,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-1 model server
+    displayName: default_is-1
   providesApis:
   - default_is-1
   type: model-server
@@ -358,7 +358,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-1 ai model
+    displayName: default_is-1
   providesApis:
   - default_is-1
   type: ai-model
@@ -377,8 +377,8 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-1 openapi
-  type: openapi
+    displayName: default_is-1
+  type: ""
 `
 	urlSet = `apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -399,7 +399,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-1 model server
+    displayName: default_is-1
   providesApis:
   - default_is-1
   type: model-server
@@ -422,7 +422,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-1 ai model
+    displayName: default_is-1
   providesApis:
   - default_is-1
   type: ai-model
@@ -446,8 +446,8 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-1 openapi
-  type: openapi
+    displayName: default_is-1
+  type: ""
 `
 
 	description2 = "description: KServe instance default:is-2"
@@ -538,7 +538,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-2 model server
+    displayName: default_is-2
   providesApis:
   - default_is-2
   type: model-server
@@ -549,7 +549,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-2 ai model
+    displayName: default_is-2
   providesApis:
   - default_is-2
   type: ai-model
@@ -561,7 +561,7 @@ spec:
   lifecycle: lifecycle
   owner: user:owner
   profile:
-    displayName: The default_is-2 openapi
-  type: openapi
+    displayName: default_is-2
+  type: ""
 `
 )

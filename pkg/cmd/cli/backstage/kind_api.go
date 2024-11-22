@@ -3,9 +3,14 @@ package backstage
 // KindAPI defines name for API kind.
 const KindAPI = "API"
 
-// ApiEntityV1alpha1 describes an interface that can be exposed by a component. The API can be defined in different formats,
-// like OpenAPI, AsyncAPI, GraphQL, gRPC, or other formats.
+// So there are upstream projects which took the backstage schema definitions, such as
 // https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/kinds/API.v1alpha1.schema.json
+// and attempted to auto generate Golang based structs for the API entity.
+// However, for reasons we want to try and find, the upstream backstage schema files have not been kept up to date
+// with the latest format we see when using the UI. The additions we need for the AI Model Catalog format we've devised
+// have been made.  And until we can sort out the upstream schema update policy, we'll have to track changes we want
+// to pull and make those manually for now.
+
 type ApiEntityV1alpha1 struct {
 	Entity
 

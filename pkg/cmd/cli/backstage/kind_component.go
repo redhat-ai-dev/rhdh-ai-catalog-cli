@@ -3,9 +3,14 @@ package backstage
 // KindComponent defines name for component kind.
 const KindComponent = "Component"
 
-// ComponentEntityV1alpha1 describes a software component. It is typically intimately linked to the source code that constitutes the
-// component, and should be what a developer may regard a "unit of software", usually with a distinct deployable or linkable artifact.
+// So there are upstream projects which took the backstage schema definitions, such as
 // https://github.com/backstage/backstage/blob/master/packages/catalog-model/src/schema/kinds/Component.v1alpha1.schema.json
+// and attempted to auto generate Golang based structs for the API entity.
+// However, for reasons we want to try and find, the upstream backstage schema files have not been kept up to date
+// with the latest format we see when using the UI. The additions we need for the AI Model Catalog format we've devised
+// have been made.  And until we can sort out the upstream schema update policy, we'll have to track changes we want
+// to pull and make those manually for now.
+
 type ComponentEntityV1alpha1 struct {
 	Entity
 

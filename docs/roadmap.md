@@ -4,28 +4,28 @@
 
 These updates are more along the lines of general usability
 
-| idea                            | description                                                    | tracker | status        |
-|---------------------------------|----------------------------------------------------------------|---------|---------------|
-| config file                     | capture connection and global parameters for reuse             |         | unimplemented |
-| entity field configmap          | with new-model, allow for field overrides from configmap       |         | unimplemented |
-| backstage cert/token cm/secret  | store/retrieve cert and token for backstage                    |         | unimplemented |
-| third part cert/token cm/secret | store/retrieve cert and token for third party                  |         | unimplemented |
-| backstage cert flag             | file/env var for backstage cert                                |         | unimplemented |
-| third party cert flag           | file/env var for third party cer                               |         | unimplemented |
-| entity field local file         | with new-mode, allow for field overrides from file             |         | unimplemented |
-| fetch URLs from routes/ingress  | when backstage,third party running on K8s, find URL            |         | unimplemented |
-| flags for output                | allow for output summary vs. json vs. yaml etc.                |         | unimplemented |
-| flags for output files          | new-model store Components/Resources/API in separate files     |         | unimplemented |
-| flags for field overrides       | new-model provide field values via command line flags          |         | unimplemented |
-| release process                 | initially github action/goreleaser; eventually konflux         |         | unimplemented |
-| e2e tests                       | running against "live" data somehow                            |         | unimplemented |
-| filter api queries for "ai"     | with no unique spec.type for API either state no filter of fix |         | unimplemented |
+| idea                             | description                                                    | tracker | status        |
+|----------------------------------|----------------------------------------------------------------|---------|---------------|
+| config file                      | capture connection and global parameters for reuse             |         | unimplemented |
+| entity field configmap           | with new-model, allow for field overrides from configmap       |         | unimplemented |
+| backstage cert/token cm/secret   | store/retrieve cert and token for backstage                    |         | unimplemented |
+| third party cert/token cm/secret | store/retrieve cert and token for third party                  |         | unimplemented |
+| backstage cert flag              | file/env var for backstage cert                                |         | unimplemented |
+| third party cert flag            | file/env var for third party cert                              |         | unimplemented |
+| entity field local file          | with new-mode, allow for field overrides from file             |         | unimplemented |
+| fetch URLs from routes/ingress   | when backstage,third party running on K8s, find URL            |         | unimplemented |
+| flags for output                 | allow for output summary vs. json vs. yaml etc.                |         | unimplemented |
+| flags for output files           | new-model store Components/Resources/API in separate files     |         | unimplemented |
+| flags for field overrides        | new-model provide field values via command line flags          |         | unimplemented |
+| release process                  | initially github action/goreleaser; eventually konflux         |         | unimplemented |
+| e2e tests                        | running against "live" data somehow                            |         | unimplemented |
+| filter api queries for "ai"      | with no unique spec.type for API either state no filter of fix |         | unimplemented |
 
 ## Upstream Backstage
 
 ### Direct injection of YAML when Creating Entities in the Catalog
 
-While the input format the body supplied to this REST API has a type field, best as we can tell, the only types supported
+While the input format of the body supplied to this REST API has a type field, best as we can tell, the only types supported
 are a HTTP accessible URL or a local file.
 
 Will users of the CLI be happy with having to take the extra step of pushing the YAML from `bac new-model ...` to say a
@@ -51,7 +51,10 @@ in Golang.
 
 The `gh` command has a A LOT of usability features outside of the standard `git` command.
 
-The `bac new-model ...` invocation could take in the necessary Git credentials and connection parameters and via use of `gh` code as 
+In response, GitLab has the `glab` command, [GitLab's official command line tool](https://gitlab.com/gitlab-org/cli).  It is 
+also written in golang, and has a very similar syntax, with the same features in many cases.
+
+The `bac new-model ...` invocation could take in the necessary Git credentials and connection parameters and via use of `gh` or `glab` code as 
 vendored dependencies:
 - create the repository if needed
 - create not just a commit, but a pull request, with the `catalog-info.yaml` file(s)
@@ -66,7 +69,7 @@ vendored dependencies:
 |-------------|----------------------------------|---------------------------------------------------------------|----------|---------|---------|
 | Kubeflow    | Endpoint URL.  Has both REST/CRD | RHOAI Jira marked done.  Which version?  End to end examples? | high     |         | waiting |
 | 3Scale      | All data ready.  Yes REST/CRDs   | Perhaps the next highest item. Devex vs. RHOAI priorities     | high     |         | new     |
-| HuggingFace | All data ready.  REST only       | Direct competitor or co-opetition.  Best for tech docs        |          |         | new     |
+| HuggingFace | All data ready.  REST only       | Most popular source for public models. Best for tech docs     |          |         | new     |
 | MLFlow      | All data ready.  REST only       | Mature. KServe support. ai-on-openshift.io refs. Competitor?  |          |         | new     |
 | Ollama      | All data ready.  REST only       | RHDH AI/Devex use vs. RHOAI sanctioned, indemnification       |          |         | new     |
 | OCI         | Endpoint URL ? REST, 'oc image'  | Often cited at strategy level. Requires coupling with ?       | high     |         | new     |
@@ -83,7 +86,7 @@ A typical flow in most cases then will be:
 
 - Run `bac new-model ...` to get the `Component`, `Resource`, and `API` definitions for the AI Model
 - Store in a Git repo
-- Manually build the TechDocs manually and store in the same Git repo in the correct spot
+- Build the TechDocs manually and store in the same Git repo in the correct spot
 - Run `bac import-model <backstage url>` 
 
 Many of the AI Model Registries still don't emphasize key developer scenarios, including the need for documentation of the

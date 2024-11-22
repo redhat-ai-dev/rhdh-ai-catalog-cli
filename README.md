@@ -11,7 +11,7 @@ in this repository.
 Rather, visit the team's [RHDHPAI Jira project and the 'model-registry-bridge' component](https://issues.redhat.com/issues/?jql=project%20%3D%20RHDHPAI%20AND%20component%20%3D%20model-registry-bridge).
 
 As the team makes sufficient progress on the basic fit and finish items in the [roadmap](docs/roadmap.md), and sufficiently
-progress beyond the prototype phase, we'll revisit the use of GitHub issues in this repository.
+progresses beyond the prototype phase, we'll revisit the use of GitHub issues in this repository.
 
 See [the development guide](docs/DEVELOPMENT.md) for details on how to build and test any contributions you make.
 
@@ -21,7 +21,7 @@ At a high level, the `bac` CLI
 
 - Provides for the generation of YAML formatted definitions of Backstage `Components`, `Resources`, and `APIs` catalog entities by accessing external systems that provide AI model metadata.
 - Which external systems are supported is expected to grow over time, at least in the short term.
-- Once that YAML information is stored in a HTTP accessible file, the `bac` CLI then provides commands to instructs a specific Backstage instance to import those entities into its catalog.  This will show up as a Backstage `Location` in the catalog, where it is a parent of the `Components`, `Resources` and `APIs`.
+- Once that YAML information is stored in a HTTP accessible file, the `bac` CLI then provides commands to instruct a specific Backstage instance to import those entities into its catalog.  This will show up as a Backstage `Location` in the catalog, where the `Location` is a parent of the `Components`, `Resources` and `APIs`.
 - Those `Components`, `Resources`, and `APIs` will have specific AI related `types` which will allow for distinguishing from other `Components`, `Resources` and `APIs` in the catalog.
 - It allows for the deletion of Backstage `Locations` and any `Components`, `Resources`, and `APIs` defined by that `Location`.
 - Lastly, the `bac` CLI allows for retrieving any AI related `Components`, `Resources` and `APIs`.

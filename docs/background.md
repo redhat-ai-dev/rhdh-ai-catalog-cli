@@ -10,7 +10,7 @@ accessible in some form or fashion:
 - KServe CRDs in K8s clusters
 - MLFlow Model Registry
 - OCI image registries like quay.io, registry.redhat.io, or docker.io
-- API GWs like 3Scale or Kong
+- API Gateways like 3Scale or Kong
 
 Each have some form of REST API.  Most if not all have a CLI that interacts with said REST API.
 
@@ -56,7 +56,7 @@ Generally speaking, you'll see either some form of:
 - "cmd verb-subject args" pattern ... `oc new-app ...` or `rosa list-clusters` or `oc new-build` or `oc cancel-build` or `oc import-image`
 - and sometimes even "cmd subject verb args" .... `tkn pr list ...` or `shp build create ...`
 
-When considering Backstage's current Catalog REST API, particularly some lack of symetry between which verbs apply to which subjects:
+When considering Backstage's current Catalog REST API, particularly some lack of symmetry between which verbs apply to which subjects:
 
 - You can only import to the ‘location’ REST with a URL pointing to a YAML document  containing the definition of multiple subjects (Components, Resource, API, pointers to TechDocs)
 - But you can get/delete on all the subject types via REST api that don’t include the subject name in REST URI

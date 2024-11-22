@@ -2,10 +2,15 @@
 
 ## Dependencies
 
-This is currently a Golang project.  Other languages may be added at a later date.  See the [go.mod file](go.mod) for the current
-version of Golang.
+Currently:
+- `go`
+- `make`
+- `git`
 
-Otherwise, `make` is employed.  And of course `git`.
+See the [go.mod file](go.mod) for the current version of Golang used in implementing this CLI.
+
+Implementations in other languages may occur at a later date.  The idea being implementations in other languages
+may help with engagement in one upstream community versus another.
 
 ## Build
 

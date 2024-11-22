@@ -88,7 +88,7 @@ spec:
   lifecycle: lifecycle
   owner: user:kube:admin
   profile:
-    displayName: The model-1 model server
+    displayName: model-1
   type: model-server
 ---
 apiVersion: backstage.io/v1alpha1
@@ -109,7 +109,7 @@ spec:
   lifecycle: lifecycle
   owner: user:kube:admin
   profile:
-    displayName: The v1 ai model
+    displayName: v1
   type: ai-model
 ---
 apiVersion: backstage.io/v1alpha1
@@ -126,7 +126,7 @@ spec:
   lifecycle: lifecycle
   owner: user:kube:admin
   profile:
-    displayName: The model-1-v1-artifact openapi
-  type: openapi
+    displayName: model-1-v1-artifact
+  type: ""
 `
 )

@@ -2,10 +2,10 @@ package kubeflowmodelregistry
 
 import (
 	"fmt"
+	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
-	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 	"strings"
@@ -240,7 +240,7 @@ func (pop *componentPopulator) GetTechdocRef() string {
 }
 
 func (pop *componentPopulator) GetDisplayName() string {
-	return fmt.Sprintf("The %s model server", pop.GetName())
+	return pop.GetName()
 }
 
 type resourcePopulator struct {
@@ -291,7 +291,7 @@ func (pop *resourcePopulator) GetDependencyOf() []string {
 }
 
 func (pop *resourcePopulator) GetDisplayName() string {
-	return fmt.Sprintf("The %s ai model", pop.GetName())
+	return pop.GetName()
 }
 
 // TODO Until we get the inferenceservice endpoint URL associated with the model registry related API won't have much for Backstage API here
@@ -326,5 +326,5 @@ func (pop *apiPopulator) GetLinks() []backstage.EntityLink {
 }
 
 func (pop *apiPopulator) GetDisplayName() string {
-	return fmt.Sprintf("The %s openapi", pop.GetName())
+	return pop.GetName()
 }

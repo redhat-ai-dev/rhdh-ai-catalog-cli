@@ -2,24 +2,33 @@
 
 ## Fit and finish
 
-These updates are more along the lines of general usability
+These updates are more along the lines of general usability.  We'll use [this epic](https://issues.redhat.com/browse/RHDHPAI-40)
+to officially track these items, but until we have a public Jira, we'll give some sense at least of what we considering
+with the table below.
 
-| idea                             | description                                                    | tracker | status        |
-|----------------------------------|----------------------------------------------------------------|---------|---------------|
-| config file                      | capture connection and global parameters for reuse             |         | unimplemented |
-| entity field configmap           | with new-model, allow for field overrides from configmap       |         | unimplemented |
-| backstage cert/token cm/secret   | store/retrieve cert and token for backstage                    |         | unimplemented |
-| third party cert/token cm/secret | store/retrieve cert and token for third party                  |         | unimplemented |
-| backstage cert flag              | file/env var for backstage cert                                |         | unimplemented |
-| third party cert flag            | file/env var for third party cert                              |         | unimplemented |
-| entity field local file          | with new-mode, allow for field overrides from file             |         | unimplemented |
-| fetch URLs from routes/ingress   | when backstage,third party running on K8s, find URL            |         | unimplemented |
-| flags for output                 | allow for output summary vs. json vs. yaml etc.                |         | unimplemented |
-| flags for output files           | new-model store Components/Resources/API in separate files     |         | unimplemented |
-| flags for field overrides        | new-model provide field values via command line flags          |         | unimplemented |
-| release process                  | initially github action/goreleaser; eventually konflux         |         | unimplemented |
-| e2e tests                        | running against "live" data somehow                            |         | unimplemented |
-| filter api queries for "ai"      | with no unique spec.type for API either state no filter of fix |         | unimplemented |
+| idea                             | description                                                    | tracker                                             | status        |
+|----------------------------------|----------------------------------------------------------------|-----------------------------------------------------|---------------|
+| config file                      | capture connection and global parameters for reuse             | [Jira](https://issues.redhat.com/browse/RHDHPAI-43) | unimplemented |
+| entity field configmap           | with new-model, allow for field overrides from configmap       | [Jira](https://issues.redhat.com/browse/RHDHPAI-44) | unimplemented |
+| backstage cert/token cm/secret   | store/retrieve cert and token for backstage                    | [Jira](https://issues.redhat.com/browse/RHDHPAI-45) | unimplemented |
+| third party cert/token cm/secret | store/retrieve cert and token for third party                  | [Jira](https://issues.redhat.com/browse/RHDHPAI-46) | unimplemented |
+| backstage cert flag              | file/env var for backstage cert                                | [Jira](https://issues.redhat.com/browse/RHDHPAI-47) | unimplemented |
+| third party cert flag            | file/env var for third party cert                              | [Jira](https://issues.redhat.com/browse/RHDHPAI-48) | unimplemented |
+| entity field local file          | with new-mode, allow for field overrides from file             | [Jira](https://issues.redhat.com/browse/RHDHPAI-49) | unimplemented |
+| fetch URLs from routes/ingress   | when backstage,third party running on K8s, find URL            | [Jira](https://issues.redhat.com/browse/RHDHPAI-54) | unimplemented |
+| fetch URLs from routes/ingress   | when kubeflow third party running on K8s, find URL             | [Jira](https://issues.redhat.com/browse/RHDHPAI-55) | unimplemented |
+| flags for output                 | allow for output summary vs. json vs. yaml etc.                | [Jira](https://issues.redhat.com/browse/RHDHPAI-56) | unimplemented |
+| flags for field overrides        | new-model provide field values via command line flags          | [Jira](https://issues.redhat.com/browse/RHDHPAI-50) | unimplemented |
+| release process                  | initially github action/goreleaser; eventually konflux         | [Jira](https://issues.redhat.com/browse/RHDHPAI-57) | unimplemented |
+| e2e tests                        | running against "live" data somehow                            | [Jira](https://issues.redhat.com/browse/RHDHPAI-59) | unimplemented |
+| filter api queries for "ai"      | with no unique spec.type for API either state no filter or fix | [Jira](https://issues.redhat.com/browse/RHDHPAI-58) | unimplemented |
+
+## Augment Initial Backstage Query Support
+
+Quite possibly use of the query function will drive desire for more features in this space.
+
+Some ideas have already emerged, but until we get some consensus on which ideas have traction, we'll wait on
+building a table here.  Look at [this epic](https://issues.redhat.com/browse/RHDHPAI-62) for the latest set of ideas.
 
 ## Upstream Backstage
 
@@ -44,6 +53,9 @@ bac new-model kubeflow > catalog-info.yaml
 bac import-model catalog-info.yaml 
 ```
 
+If we get enough demand for such a change with upstream Backstage, we'll drive 
+work with it with [this Jira](https://issues.redhat.com/browse/RHDHPAI-61).
+
 #### One advantage of being in Golang with respect to Gitops with GitHub ...
 
 The uber functional `gh` command, [GitHub's official command line tool](https://github.com/cli/cli), happens to be written
@@ -65,17 +77,17 @@ vendored dependencies:
 
 ## New 'Model Metadata' sources
 
-| Source      | Summary/REST/CRDs                | Questions/Comments                                            | Priority | Tracker | Status  |
-|-------------|----------------------------------|---------------------------------------------------------------|----------|---------|---------|
-| Kubeflow    | Endpoint URL.  Has both REST/CRD | RHOAI Jira marked done.  Which version?  End to end examples? | high     |         | waiting |
-| 3Scale      | All data ready.  Yes REST/CRDs   | Perhaps the next highest item. Devex vs. RHOAI priorities     | high     |         | new     |
-| HuggingFace | All data ready.  REST only       | Most popular source for public models. Best for tech docs     |          |         | new     |
-| MLFlow      | All data ready.  REST only       | Mature. KServe support. ai-on-openshift.io refs. Competitor?  |          |         | new     |
-| Ollama      | All data ready.  REST only       | RHDH AI/Devex use vs. RHOAI sanctioned, indemnification       |          |         | new     |
-| OCI         | Endpoint URL ? REST, 'oc image'  | Often cited at strategy level. Requires coupling with ?       | high     |         | new     |
-| Open WebUI  | All data ready.  REST only       | Competition? But supports Kubernetes.                         |          |         | new     |
-|             |                                  |                                                               |          |         |         |
-|             |                                  |                                                               |          |         |         |
+| Source      | Summary/REST/CRDs                | Questions/Comments                                            | Priority | Tracker                                              | Status  |
+|-------------|----------------------------------|---------------------------------------------------------------|----------|------------------------------------------------------|---------|
+| Kubeflow    | Endpoint URL.  Has both REST/CRD | RHOAI Jira marked done.  Which version?  End to end examples? | high     | [Jira](https://issues.redhat.com/browse/RHDHPAI-64)  | waiting |
+| 3Scale      | All data ready.  Yes REST/CRDs   | Perhaps the next highest item. Devex vs. RHOAI priorities     | high     | [Jira](https://issues.redhat.com/browse/RHDHPAI-65)  | new     |
+| HuggingFace | All data ready.  REST only       | Most popular source for public models. Best for tech docs     |          | [Jira](https://issues.redhat.com/browse/RHDHPAI-667) | new     |
+| MLFlow      | All data ready.  REST only       | Mature. KServe support. ai-on-openshift.io refs. Competitor?  |          |                                                      | new     |
+| Ollama      | All data ready.  REST only       | RHDH AI/Devex use vs. RHOAI sanctioned, indemnification       |          | [Jira](https://issues.redhat.com/browse/RHDHPAI-66)  | new     |
+| OCI         | Endpoint URL ? REST, 'oc image'  | Often cited at strategy level. Requires coupling with ?       | high     |                                                      | new     |
+| Open WebUI  | All data ready.  REST only       | Competition? But supports Kubernetes.                         |          |                                                      | new     |
+|             |                                  |                                                               |          |                                                      |         |
+|             |                                  |                                                               |          |                                                      |         |
 
 ## TechDocs
 

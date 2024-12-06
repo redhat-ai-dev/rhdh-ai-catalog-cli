@@ -1,0 +1,21 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+      "config:recommended",
+      ":automergeDisabled",
+      ":gitSignOff",
+      "helpers:pinGitHubActionDigests",
+      "mergeConfidence:all-badges"
+    ],
+    "timezone": "America/Toronto",
+    "description": "Run on the 1st and 15th of each month after midnight",
+    "schedule": [
+      "* 0 1,15 * *"
+    ],
+    "vulnerabilityAlerts": {
+      "enabled": true
+    },
+    "osvVulnerabilityAlerts": true,
+    "prHourlyLimit": 10,
+    "prConcurrentLimit": 10
+  }

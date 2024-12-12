@@ -10,6 +10,7 @@ const (
 	GRAPHQL_API_TYPE   = "graphql"
 	GRPC_API_TYPE      = "grpc"
 	TRPC_API_TYPE      = "trpc"
+	UNKNOWN_API_TYPE   = "unknown"
 	LINK_API_URL       = "API URL"
 	LINK_TYPE_WEBSITE  = "website"
 	LINK_ICON_WEBASSET = "WebAsset"

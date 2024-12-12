@@ -77,17 +77,17 @@ vendored dependencies:
 
 ## New 'Model Metadata' sources
 
-| Source      | Summary/REST/CRDs                | Questions/Comments                                            | Priority | Tracker                                              | Status  |
-|-------------|----------------------------------|---------------------------------------------------------------|----------|------------------------------------------------------|---------|
-| Kubeflow    | Endpoint URL.  Has both REST/CRD | RHOAI Jira marked done.  Which version?  End to end examples? | high     | [Jira](https://issues.redhat.com/browse/RHDHPAI-64)  | waiting |
-| 3Scale      | All data ready.  Yes REST/CRDs   | Perhaps the next highest item. Devex vs. RHOAI priorities     | high     | [Jira](https://issues.redhat.com/browse/RHDHPAI-65)  | new     |
-| HuggingFace | All data ready.  REST only       | Most popular source for public models. Best for tech docs     |          | [Jira](https://issues.redhat.com/browse/RHDHPAI-667) | new     |
-| MLFlow      | All data ready.  REST only       | Mature. KServe support. ai-on-openshift.io refs. Competitor?  |          |                                                      | new     |
-| Ollama      | All data ready.  REST only       | RHDH AI/Devex use vs. RHOAI sanctioned, indemnification       |          | [Jira](https://issues.redhat.com/browse/RHDHPAI-66)  | new     |
-| OCI         | Endpoint URL ? REST, 'oc image'  | Often cited at strategy level. Requires coupling with ?       | high     |                                                      | new     |
-| Open WebUI  | All data ready.  REST only       | Competition? But supports Kubernetes.                         |          |                                                      | new     |
-|             |                                  |                                                               |          |                                                      |         |
-|             |                                  |                                                               |          |                                                      |         |
+| Source      | Summary/REST/CRDs                | Questions/Comments                                                                                                         | Priority | Tracker                                              | Status      |
+|-------------|----------------------------------|----------------------------------------------------------------------------------------------------------------------------|----------|------------------------------------------------------|-------------|
+| Kubeflow    | Endpoint URL.  Has both REST/CRD | Opened [this RFE](https://issues.redhat.com/browse/RHOAIENG-16898) for RHOAI to better optimize route retrieval for 'bac'  | high     | [Jira](https://issues.redhat.com/browse/RHDHPAI-64)  | implemented |
+| 3Scale      | All data ready.  Yes REST/CRDs   | Perhaps the next highest item. Devex vs. RHOAI priorities                                                                  | high     | [Jira](https://issues.redhat.com/browse/RHDHPAI-65)  | new         |
+| HuggingFace | All data ready.  REST only       | Most popular source for public models. Best for tech docs                                                                  |          | [Jira](https://issues.redhat.com/browse/RHDHPAI-667) | new         |
+| MLFlow      | All data ready.  REST only       | Mature. KServe support. ai-on-openshift.io refs. Competitor?                                                               |          |                                                      | new         |
+| Ollama      | All data ready.  REST only       | RHDH AI/Devex use vs. RHOAI sanctioned, indemnification                                                                    |          | [Jira](https://issues.redhat.com/browse/RHDHPAI-66)  | new         |
+| OCI         | Endpoint URL ? REST, 'oc image'  | Often cited at strategy level. Requires coupling with ?                                                                    | high     |                                                      | new         |
+| Open WebUI  | All data ready.  REST only       | Competition? But supports Kubernetes.                                                                                      |          |                                                      | new         |
+|             |                                  |                                                                                                                            |          |                                                      |             |
+|             |                                  |                                                                                                                            |          |                                                      |             |
 
 ## TechDocs
 

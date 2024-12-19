@@ -41,39 +41,39 @@ func TestNewCmd(t *testing.T) {
 			name:           "no args",
 			args:           []string{},
 			generatesError: true,
-			errorStr:       "need to specify an owner and lifecycle setting",
+			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
-			name:           "owner only",
-			args:           []string{"owner"},
+			name:           "Owner only",
+			args:           []string{"Owner"},
 			generatesError: true,
-			errorStr:       "need to specify an owner and lifecycle setting",
+			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
-			name: "owner and lifecycle but no data",
-			args: []string{"owner", "lifecycle"},
+			name: "Owner and Lifecycle but no data",
+			args: []string{"Owner", "Lifecycle"},
 		},
 		{
-			name: "owner and lifecycle and data but no url",
-			args: []string{"owner", "lifecycle"},
+			name: "Owner and Lifecycle and data but no url",
+			args: []string{"Owner", "Lifecycle"},
 			is: []serverapiv1beta1.InferenceService{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: metav1.NamespaceDefault,
-						Name:      "is-1",
+						Name:      "InferSvc-1",
 					},
 				},
 			},
 			outStr: []string{urlNotSet},
 		},
 		{
-			name: "owner and lifecycle set and data and url",
-			args: []string{"owner", "lifecycle"},
+			name: "Owner and Lifecycle set and data and url",
+			args: []string{"Owner", "Lifecycle"},
 			is: []serverapiv1beta1.InferenceService{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: metav1.NamespaceDefault,
-						Name:      "is-1",
+						Name:      "InferSvc-1",
 					},
 					Status: serverapiv1beta1.InferenceServiceStatus{
 						URL: &apis.URL{
@@ -87,12 +87,12 @@ func TestNewCmd(t *testing.T) {
 		},
 		{
 			name: "use everything including bunch of tags",
-			args: []string{"owner", "lifecycle"},
+			args: []string{"Owner", "Lifecycle"},
 			is: []serverapiv1beta1.InferenceService{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: metav1.NamespaceDefault,
-						Name:      "is-1",
+						Name:      "InferSvc-1",
 					},
 					Status: serverapiv1beta1.InferenceServiceStatus{
 						URL: &apis.URL{
@@ -104,7 +104,7 @@ func TestNewCmd(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: metav1.NamespaceDefault,
-						Name:      "is-2",
+						Name:      "InferSvc-2",
 					},
 					Spec: serverapiv1beta1.InferenceServiceSpec{
 						Predictor: serverapiv1beta1.PredictorSpec{
@@ -189,12 +189,12 @@ func TestNewCmd(t *testing.T) {
 		},
 		{
 			name: "fetch 2 specific inferenceservices",
-			args: []string{"owner", "lifecycle", "is-1", "is-2"},
+			args: []string{"Owner", "Lifecycle", "InferSvc-1", "InferSvc-2"},
 			is: []serverapiv1beta1.InferenceService{
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: metav1.NamespaceDefault,
-						Name:      "is-1",
+						Name:      "InferSvc-1",
 					},
 					Status: serverapiv1beta1.InferenceServiceStatus{
 						URL: &apis.URL{
@@ -206,7 +206,7 @@ func TestNewCmd(t *testing.T) {
 				{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: metav1.NamespaceDefault,
-						Name:      "is-2",
+						Name:      "InferSvc-2",
 					},
 					Spec: serverapiv1beta1.InferenceServiceSpec{
 						Predictor: serverapiv1beta1.PredictorSpec{
@@ -331,18 +331,18 @@ kind: Component
 metadata:
   annotations:
     backstage.io/techdocs-ref: ./
-  description: KServe instance default:is-1
-  name: default_is-1
+  description: KServe instance default:InferSvc-1
+  name: default_InferSvc-1
 spec:
   dependsOn:
-  - resource:default_is-1
-  - api:default_is-1
-  lifecycle: lifecycle
-  owner: user:owner
+  - resource:default_InferSvc-1
+  - api:default_InferSvc-1
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-1
+    displayName: default_InferSvc-1
   providesApis:
-  - default_is-1
+  - default_InferSvc-1
   type: model-server
 ---
 apiVersion: backstage.io/v1alpha1
@@ -350,17 +350,17 @@ kind: Resource
 metadata:
   annotations:
     backstage.io/techdocs-ref: resource/
-  description: KServe instance default:is-1
-  name: default_is-1
+  description: KServe instance default:InferSvc-1
+  name: default_InferSvc-1
 spec:
   dependencyOf:
-  - component:default_is-1
-  lifecycle: lifecycle
-  owner: user:owner
+  - component:default_InferSvc-1
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-1
+    displayName: default_InferSvc-1
   providesApis:
-  - default_is-1
+  - default_InferSvc-1
   type: ai-model
 ---
 apiVersion: backstage.io/v1alpha1
@@ -368,40 +368,40 @@ kind: API
 metadata:
   annotations:
     backstage.io/techdocs-ref: api/
-  description: KServe instance default:is-1
-  name: default_is-1
+  description: KServe instance default:InferSvc-1
+  name: default_InferSvc-1
 spec:
   definition: ""
   dependencyOf:
-  - component:default_is-1
-  lifecycle: lifecycle
-  owner: user:owner
+  - component:default_InferSvc-1
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-1
-  type: ""
+    displayName: default_InferSvc-1
+  type: unknown
 `
 	urlSet = `apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   annotations:
     backstage.io/techdocs-ref: ./
-  description: KServe instance default:is-1
+  description: KServe instance default:InferSvc-1
   links:
   - icon: WebAsset
     title: API URL
     type: website
     url: https://kserve.com
-  name: default_is-1
+  name: default_InferSvc-1
 spec:
   dependsOn:
-  - resource:default_is-1
-  - api:default_is-1
-  lifecycle: lifecycle
-  owner: user:owner
+  - resource:default_InferSvc-1
+  - api:default_InferSvc-1
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-1
+    displayName: default_InferSvc-1
   providesApis:
-  - default_is-1
+  - default_InferSvc-1
   type: model-server
 ---
 apiVersion: backstage.io/v1alpha1
@@ -409,22 +409,22 @@ kind: Resource
 metadata:
   annotations:
     backstage.io/techdocs-ref: resource/
-  description: KServe instance default:is-1
+  description: KServe instance default:InferSvc-1
   links:
   - icon: WebAsset
     title: API URL
     type: website
     url: https://kserve.com
-  name: default_is-1
+  name: default_InferSvc-1
 spec:
   dependencyOf:
-  - component:default_is-1
-  lifecycle: lifecycle
-  owner: user:owner
+  - component:default_InferSvc-1
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-1
+    displayName: default_InferSvc-1
   providesApis:
-  - default_is-1
+  - default_InferSvc-1
   type: ai-model
 ---
 apiVersion: backstage.io/v1alpha1
@@ -432,25 +432,25 @@ kind: API
 metadata:
   annotations:
     backstage.io/techdocs-ref: api/
-  description: KServe instance default:is-1
+  description: KServe instance default:InferSvc-1
   links:
   - icon: WebAsset
     title: API URL
     type: website
     url: https://kserve.com
-  name: default_is-1
+  name: default_InferSvc-1
 spec:
   definition: ""
   dependencyOf:
-  - component:default_is-1
-  lifecycle: lifecycle
-  owner: user:owner
+  - component:default_InferSvc-1
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-1
-  type: ""
+    displayName: default_InferSvc-1
+  type: unknown
 `
 
-	description2 = "description: KServe instance default:is-2"
+	description2 = "description: KServe instance default:InferSvc-2"
 	link21       = `  - icon: WebAsset
     title: API URL
     type: website
@@ -516,7 +516,7 @@ spec:
     type: website
     url: https://kserve.com/grpc
 `
-	nameTags2 = `  name: default_is-2
+	nameTags2 = `  name: default_InferSvc-2
   tags:
   - sklearn
   - xgboost
@@ -533,35 +533,35 @@ spec:
 `
 	compSpec2 = `spec:
   dependsOn:
-  - resource:default_is-2
-  - api:default_is-2
-  lifecycle: lifecycle
-  owner: user:owner
+  - resource:default_InferSvc-2
+  - api:default_InferSvc-2
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-2
+    displayName: default_InferSvc-2
   providesApis:
-  - default_is-2
+  - default_InferSvc-2
   type: model-server
 `
 	resourceSpec2 = `spec:
   dependencyOf:
-  - component:default_is-2
-  lifecycle: lifecycle
-  owner: user:owner
+  - component:default_InferSvc-2
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-2
+    displayName: default_InferSvc-2
   providesApis:
-  - default_is-2
+  - default_InferSvc-2
   type: ai-model
 `
 	apiSpec2 = `spec:
   definition: ""
   dependencyOf:
-  - component:default_is-2
-  lifecycle: lifecycle
-  owner: user:owner
+  - component:default_InferSvc-2
+  lifecycle: Lifecycle
+  owner: user:Owner
   profile:
-    displayName: default_is-2
-  type: ""
+    displayName: default_InferSvc-2
+  type: unknown
 `
 )

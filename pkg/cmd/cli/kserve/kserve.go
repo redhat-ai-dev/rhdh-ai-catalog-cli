@@ -18,21 +18,21 @@ import (
 
 const (
 	kserveExamples = `
-# Both owner and lifecycle are required parameters.  Examine Backstage Catalog documentation for details.
+# Both Owner and Lifecycle are required parameters.  Examine Backstage Catalog documentation for details.
 # This will query all the InferenceService instances in the current namespace and build Catalog Component, Resource, and
 # API Entities from the data.
-$ %s new-model kserve <owner> <lifecycle> <args...>
+$ %s new-model kserve <Owner> <Lifecycle> <args...>
 
 # This example shows the flags that will set the URL, Token, and Skip TLS when accessing the cluster for InferenceService instances 
-$ %s new-model kserve <owner> <lifecycle> --model-metadata-url=https://my-kubeflow.com --model-metadata-token=my-token --model-metadata-skip-tls=true
+$ %s new-model kserve <Owner> <Lifecycle> --model-metadata-url=https://my-kubeflow.com --model-metadata-token=my-token --model-metadata-skip-tls=true
 
 # The '--kubeconfig' flag can be used to set the location of the configuration file used for accessing the credentials
 # used for interacting with the Kubernetes cluster.
-$ %s new-model kserve <owner> <lifecycle> --kubeconfig=/home/myid/my-kube.json
+$ %s new-model kserve <Owner> <Lifecycle> --kubeconfig=/home/myid/my-kube.json
 
 # This form will pull in only the InferenceService instances with the names 'inferenceservice1' and 'inferenceservice2'
 # in the 'my-datascience-project'namespace in order to build Catalog Component, Resource, and API Entities.
-$ %s new-model kserve owner lifecycle inferenceservice1 inferenceservice2 --namespace my-datascience-project
+$ %s new-model kserve Owner Lifecycle inferenceservice1 inferenceservice2 --namespace my-datascience-project
 `
 	sklearn     = "sklearn"
 	xgboost     = "xgboost"
@@ -46,38 +46,38 @@ $ %s new-model kserve owner lifecycle inferenceservice1 inferenceservice2 --name
 	paddle      = "paddle"
 )
 
-type commonPopulator struct {
-	owner     string
-	lifecycle string
-	is        *serverapiv1beta1.InferenceService
+type CommonPopulator struct {
+	Owner     string
+	Lifecycle string
+	InferSvc  *serverapiv1beta1.InferenceService
 }
 
-func (pop *commonPopulator) GetOwner() string {
-	return pop.owner
+func (pop *CommonPopulator) GetOwner() string {
+	return pop.Owner
 }
 
-func (pop *commonPopulator) GetLifecycle() string {
-	return pop.lifecycle
+func (pop *CommonPopulator) GetLifecycle() string {
+	return pop.Lifecycle
 }
 
-func (pop *commonPopulator) GetName() string {
-	return fmt.Sprintf("%s_%s", pop.is.Namespace, pop.is.Name)
+func (pop *CommonPopulator) GetName() string {
+	return fmt.Sprintf("%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)
 }
-func (pop *commonPopulator) GetDescription() string {
-	return fmt.Sprintf("KServe instance %s:%s", pop.is.Namespace, pop.is.Name)
+func (pop *CommonPopulator) GetDescription() string {
+	return fmt.Sprintf("KServe instance %s:%s", pop.InferSvc.Namespace, pop.InferSvc.Name)
 }
 
-func (pop *commonPopulator) GetLinks() []backstage.EntityLink {
+func (pop *CommonPopulator) GetLinks() []backstage.EntityLink {
 	links := []backstage.EntityLink{}
-	if pop.is.Status.URL != nil {
+	if pop.InferSvc.Status.URL != nil {
 		links = append(links, backstage.EntityLink{
-			URL:   pop.is.Status.URL.String(),
+			URL:   pop.InferSvc.Status.URL.String(),
 			Title: backstage.LINK_API_URL,
 			Type:  backstage.LINK_TYPE_WEBSITE,
 			Icon:  backstage.LINK_ICON_WEBASSET,
 		})
 	}
-	for componentType, componentStatus := range pop.is.Status.Components {
+	for componentType, componentStatus := range pop.InferSvc.Status.Components {
 
 		if componentStatus.URL != nil {
 			links = append(links, backstage.EntityLink{
@@ -113,9 +113,9 @@ func (pop *commonPopulator) GetLinks() []backstage.EntityLink {
 	return links
 }
 
-func (pop *commonPopulator) GetTags() []string {
+func (pop *CommonPopulator) GetTags() []string {
 	tags := []string{}
-	predictor := pop.is.Spec.Predictor
+	predictor := pop.InferSvc.Spec.Predictor
 	// one and only one predictor spec can be set
 	switch {
 	case predictor.SKLearn != nil:
@@ -157,23 +157,23 @@ func (pop *commonPopulator) GetTags() []string {
 		tag = strings.ToLower(tag)
 		tags = append(tags, tag)
 	}
-	explainer := pop.is.Spec.Explainer
+	explainer := pop.InferSvc.Spec.Explainer
 	if explainer != nil && explainer.ART != nil {
 		tags = append(tags, strings.ToLower(string(explainer.ART.Type)))
 	}
 	return tags
 }
 
-func (pop *commonPopulator) GetProvidedAPIs() []string {
-	return []string{fmt.Sprintf("%s_%s", pop.is.Namespace, pop.is.Name)}
+func (pop *CommonPopulator) GetProvidedAPIs() []string {
+	return []string{fmt.Sprintf("%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
 type componentPopulator struct {
-	commonPopulator
+	CommonPopulator
 }
 
 func (pop *componentPopulator) GetDependsOn() []string {
-	return []string{fmt.Sprintf("resource:%s_%s", pop.is.Namespace, pop.is.Name), fmt.Sprintf("api:%s_%s", pop.is.Namespace, pop.is.Name)}
+	return []string{fmt.Sprintf("resource:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name), fmt.Sprintf("api:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
 func (pop *componentPopulator) GetTechdocRef() string {
@@ -185,11 +185,11 @@ func (pop *componentPopulator) GetDisplayName() string {
 }
 
 type resourcePopulator struct {
-	commonPopulator
+	CommonPopulator
 }
 
 func (pop *resourcePopulator) GetDependencyOf() []string {
-	return []string{fmt.Sprintf("component:%s_%s", pop.is.Namespace, pop.is.Name)}
+	return []string{fmt.Sprintf("component:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
 func (pop *resourcePopulator) GetTechdocRef() string {
@@ -201,18 +201,18 @@ func (pop *resourcePopulator) GetDisplayName() string {
 }
 
 type apiPopulator struct {
-	commonPopulator
+	CommonPopulator
 }
 
 func (pop *apiPopulator) GetDependencyOf() []string {
-	return []string{fmt.Sprintf("component:%s_%s", pop.is.Namespace, pop.is.Name)}
+	return []string{fmt.Sprintf("component:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
 func (pop *apiPopulator) GetDefinition() string {
-	if pop.is.Status.URL == nil {
+	if pop.InferSvc.Status.URL == nil {
 		return ""
 	}
-	defBytes, _ := util.FetchURL(pop.is.Status.URL.String() + "/openapi.json")
+	defBytes, _ := util.FetchURL(pop.InferSvc.Status.URL.String() + "/openapi.json")
 	dst := bytes.Buffer{}
 	json.Indent(&dst, defBytes, "", "    ")
 	return dst.String()
@@ -228,7 +228,7 @@ func (pop *apiPopulator) GetDisplayName() string {
 
 func SetupKServeClient(cfg *config.Config) {
 	if cfg == nil {
-		klog.Error("Command config is nil")
+		klog.Error("Command config InferSvc nil")
 		klog.Flush()
 		os.Exit(1)
 	}
@@ -261,7 +261,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 			ids := []string{}
 
 			if len(args) < 2 {
-				err := fmt.Errorf("need to specify an owner and lifecycle setting")
+				err := fmt.Errorf("need to specify an Owner and Lifecycle setting")
 				klog.Errorf("%s", err.Error())
 				klog.Flush()
 				return err
@@ -316,27 +316,27 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 
 func callBackstagePrinters(owner, lifecycle string, is *serverapiv1beta1.InferenceService, cmd *cobra.Command) error {
 	compPop := componentPopulator{}
-	compPop.owner = owner
-	compPop.lifecycle = lifecycle
-	compPop.is = is
+	compPop.Owner = owner
+	compPop.Lifecycle = lifecycle
+	compPop.InferSvc = is
 	err := backstage.PrintComponent(&compPop, cmd)
 	if err != nil {
 		return err
 	}
 
 	resPop := resourcePopulator{}
-	resPop.owner = owner
-	resPop.lifecycle = lifecycle
-	resPop.is = is
+	resPop.Owner = owner
+	resPop.Lifecycle = lifecycle
+	resPop.InferSvc = is
 	err = backstage.PrintResource(&resPop, cmd)
 	if err != nil {
 		return err
 	}
 
 	apiPop := apiPopulator{}
-	apiPop.owner = owner
-	apiPop.lifecycle = lifecycle
-	apiPop.is = is
+	apiPop.Owner = owner
+	apiPop.Lifecycle = lifecycle
+	apiPop.InferSvc = is
 	err = backstage.PrintAPI(&apiPop, cmd)
 	return err
 }

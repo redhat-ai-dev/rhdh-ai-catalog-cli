@@ -110,6 +110,8 @@ func PrintAPI(pop APIPopulator, cmd *cobra.Command) error {
 		api.Spec.Type = TRPC_API_TYPE
 	case strings.Contains(api.Spec.Definition, "proto"):
 		api.Spec.Type = GRPC_API_TYPE
+	default:
+		api.Spec.Type = UNKNOWN_API_TYPE
 	}
 
 	err := util.PrintYaml(api, false, cmd)

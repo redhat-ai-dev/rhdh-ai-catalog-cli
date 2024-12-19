@@ -3,8 +3,9 @@ package kubeflowmodelregistry
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/go-resty/resty/v2"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"k8s.io/klog/v2"
 	"os"
 )
@@ -14,11 +15,14 @@ const (
 	GET_REG_MODEL_URI                = "/registered_models/%s"
 	LIST_VERSIONS_OFF_REG_MODELS_URI = "/registered_models/%s/versions"
 	LIST_ARTFIACTS_OFF_VERSIONS_URI  = "/model_versions/%s/artifacts"
+	LIST_INFERENCE_SERVICES_URI      = "/inference_services"
 	LIST_REG_MODEL_URI               = "/registered_models"
+	GET_SERVING_ENV_URI              = "/serving_environments/%s"
 )
 
 type KubeFlowRESTClientWrapper struct {
 	RESTClient *resty.Client
+	Config     *config.Config
 	RootURL    string
 	Token      string
 }
@@ -49,6 +53,13 @@ func SetupKubeflowRESTClient(cfg *config.Config) *KubeFlowRESTClientWrapper {
 		tlsCfg.InsecureSkipVerify = true
 	}
 	kubeFlowRESTClient.RESTClient.SetTLSClientConfig(tlsCfg)
+
+	//TODO unless https://issues.redhat.com/browse/RHOAIENG-16898 gets processed such that KFMR
+	// starts adding the KServer inferenceservice.status.url in the inference_service / serving_environment
+	// object, we need to take the names from those two items as the name and namespace for a KServe client lookup.
+	// Hence we have to set up the KServe serving client
+	kserve.SetupKServeClient(cfg)
+	kubeFlowRESTClient.Config = cfg
 
 	return kubeFlowRESTClient
 }

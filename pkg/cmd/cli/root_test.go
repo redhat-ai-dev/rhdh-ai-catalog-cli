@@ -24,12 +24,12 @@ func TestNewCmd(t *testing.T) {
 		{
 			args:           []string{"new-model", "kserve"},
 			generatesError: true,
-			errorStr:       "need to specify an owner and lifecycle setting",
+			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
 			args:           []string{"new-model", "kubeflow"},
 			generatesError: true,
-			errorStr:       "need to specify an owner and lifecycle setting",
+			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
 			args:          []string{"new-model", "help", "kserve"},

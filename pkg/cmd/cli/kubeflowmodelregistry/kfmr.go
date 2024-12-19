@@ -1,12 +1,15 @@
 package kubeflowmodelregistry
 
 import (
+	"context"
 	"fmt"
 	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"strings"
 )
@@ -14,15 +17,15 @@ import (
 const (
 	kubeflowExample = `
 # Both owner and lifecycle are required parameters.  Examine Backstage Catalog documentation for details.
-# This will query all the RegisteredModel, ModelVersion, and ModelArtifact instances in the Kubeflow Model Registry and build Catalog Component, Resource, and
+# This will query all the RegisteredModel, ModelVersion, ModelArtifact, and InferenceService instances in the Kubeflow Model Registry and build Catalog Component, Resource, and
 # API Entities from the data.
 $ %s new-model kubeflow <owner> <lifecycle> <args...>
 
 # This will set the URL, Token, and Skip TLS when accessing Kubeflow
 $ %s new-model kubeflow <owner> <lifecycle> --model-metadata-url=https://my-kubeflow.com --model-metadata-token=my-token --model-metadata-skip-tls=true
 
-# This form will pull in only the RegisteredModels with the specified IDs '1' and '2' and their ModelVersion and ModelArtifact
-# children in order to build Catalog Component, Resource, and API Entities.
+# This form will pull in only the RegisteredModels with the specified IDs '1' and '2' and the ModelVersion, ModelArtifact, and InferenceService
+# artifacts that are linked to those RegisteredModels in order to build Catalog Component, Resource, and API Entities.
 $ %s new-model kubeflow <owner> <lifecycle> 1 2 
 `
 )
@@ -38,7 +41,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 			ids := []string{}
 
 			if len(args) < 2 {
-				err := fmt.Errorf("need to specify an owner and lifecycle setting")
+				err := fmt.Errorf("need to specify an Owner and Lifecycle setting")
 				klog.Errorf("%s", err.Error())
 				klog.Flush()
 				return err
@@ -52,8 +55,12 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 
 			kfmr := SetupKubeflowRESTClient(cfg)
 
+			var err error
+			var isl []openapi.InferenceService
+
+			isl, err = kfmr.ListInferenceServices()
+
 			if len(ids) == 0 {
-				var err error
 				var rms []openapi.RegisteredModel
 				rms, err = kfmr.ListRegisteredModels()
 				if err != nil {
@@ -70,7 +77,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 						klog.Flush()
 						return err
 					}
-					err = callBackstagePrinters(owner, lifecycle, &rm, mvs, mas, cmd)
+					err = callBackstagePrinters(owner, lifecycle, &rm, mvs, mas, isl, kfmr, cmd)
 					if err != nil {
 						klog.Errorf("print model catalog: %s", err.Error())
 						klog.Flush()
@@ -79,7 +86,8 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 				}
 			} else {
 				for _, id := range ids {
-					rm, err := kfmr.GetRegisteredModel(id)
+					var rm *openapi.RegisteredModel
+					rm, err = kfmr.GetRegisteredModel(id)
 					if err != nil {
 						klog.Errorf("get registered model error for %s: %s", id, err.Error())
 						klog.Flush()
@@ -93,7 +101,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 						klog.Flush()
 						return err
 					}
-					err = callBackstagePrinters(owner, lifecycle, rm, mvs, mas, cmd)
+					err = callBackstagePrinters(owner, lifecycle, rm, mvs, mas, isl, kfmr, cmd)
 				}
 			}
 			return nil
@@ -129,13 +137,15 @@ func callKubeflowREST(id string, kfmr *KubeFlowRESTClientWrapper) (mvs []openapi
 	return
 }
 
-func callBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel, mvs []openapi.ModelVersion, mas map[string][]openapi.ModelArtifact, cmd *cobra.Command) error {
+func callBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel, mvs []openapi.ModelVersion, mas map[string][]openapi.ModelArtifact, isl []openapi.InferenceService, kfmr *KubeFlowRESTClientWrapper, cmd *cobra.Command) error {
 	compPop := componentPopulator{}
 	compPop.owner = owner
 	compPop.lifecycle = lifecycle
+	compPop.kfmr = kfmr
 	compPop.registeredModel = rm
 	compPop.modelVersions = mvs
 	compPop.modelArtifacts = mas
+	compPop.inferenceServices = isl
 	err := backstage.PrintComponent(&compPop, cmd)
 	if err != nil {
 		return err
@@ -144,6 +154,7 @@ func callBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel,
 	resPop := resourcePopulator{}
 	resPop.owner = owner
 	resPop.lifecycle = lifecycle
+	resPop.kfmr = kfmr
 	resPop.registeredModel = rm
 	for _, mv := range mvs {
 		resPop.modelVersion = &mv
@@ -158,21 +169,18 @@ func callBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel,
 	apiPop := apiPopulator{}
 	apiPop.owner = owner
 	apiPop.lifecycle = lifecycle
+	apiPop.kfmr = kfmr
 	apiPop.registeredModel = rm
-	for _, arr := range mas {
-		for _, ma := range arr {
-			apiPop.modelArtifact = &ma
-			err = backstage.PrintAPI(&apiPop, cmd)
-			return err
-		}
-	}
-	return nil
+	apiPop.inferenceServices = isl
+	return backstage.PrintAPI(&apiPop, cmd)
 }
 
 type commonPopulator struct {
-	owner           string
-	lifecycle       string
-	registeredModel *openapi.RegisteredModel
+	owner             string
+	lifecycle         string
+	registeredModel   *openapi.RegisteredModel
+	inferenceServices []openapi.InferenceService
+	kfmr              *KubeFlowRESTClientWrapper
 }
 
 func (pop *commonPopulator) GetOwner() string {
@@ -208,9 +216,61 @@ func (pop *componentPopulator) GetName() string {
 	return pop.registeredModel.Name
 }
 
-// TODO Until we get the inferenceservice endpoint URL associated with the model registry related API won't have component links
 func (pop *componentPopulator) GetLinks() []backstage.EntityLink {
-	return []backstage.EntityLink{}
+	links := pop.getLinksFromInferenceServices()
+	// GGM maybe multi resource / multi model indication
+	for _, maa := range pop.modelArtifacts {
+		for _, ma := range maa {
+			if ma.Uri != nil {
+				links = append(links, backstage.EntityLink{
+					URL:   *ma.Uri,
+					Title: ma.GetDescription(),
+					Icon:  backstage.LINK_ICON_WEBASSET,
+					Type:  backstage.LINK_TYPE_WEBSITE,
+				})
+			}
+		}
+	}
+
+	return links
+}
+
+func (pop *commonPopulator) getLinksFromInferenceServices() []backstage.EntityLink {
+	links := []backstage.EntityLink{}
+	for _, is := range pop.inferenceServices {
+		var rmid *string
+		var ok bool
+		rmid, ok = pop.registeredModel.GetIdOk()
+		if !ok {
+			continue
+		}
+		if is.RegisteredModelId != *rmid {
+			continue
+		}
+		var iss *openapi.InferenceServiceState
+		iss, ok = is.GetDesiredStateOk()
+		if !ok {
+			continue
+		}
+		if *iss != openapi.INFERENCESERVICESTATE_DEPLOYED {
+			continue
+		}
+		se, err := pop.kfmr.GetServingEnvironment(is.ServingEnvironmentId)
+		if err != nil {
+			klog.Errorf("componentPopulator GetLinks: %s", err.Error())
+			continue
+		}
+		kisns := se.GetName()
+		kisnm := is.GetRuntime()
+		kis, err := pop.kfmr.Config.ServingClient.InferenceServices(kisns).Get(context.Background(), kisnm, metav1.GetOptions{})
+		if err != nil {
+			klog.Errorf("componentPopulator GetLinks: %s", err.Error())
+			continue
+		}
+		kpop := kserve.CommonPopulator{InferSvc: kis}
+		links = append(links, kpop.GetLinks()...)
+	}
+	return links
 }
 
 func (pop *componentPopulator) GetTags() []string {
@@ -259,6 +319,7 @@ func (pop *resourcePopulator) GetTechdocRef() string {
 
 func (pop *resourcePopulator) GetLinks() []backstage.EntityLink {
 	links := []backstage.EntityLink{}
+	// GGM maybe multi resource / multi model indication
 	for _, ma := range pop.modelArtifacts {
 		if ma.Uri != nil {
 			links = append(links, backstage.EntityLink{
@@ -297,11 +358,10 @@ func (pop *resourcePopulator) GetDisplayName() string {
 // TODO Until we get the inferenceservice endpoint URL associated with the model registry related API won't have much for Backstage API here
 type apiPopulator struct {
 	commonPopulator
-	modelArtifact *openapi.ModelArtifact
 }
 
 func (pop *apiPopulator) GetName() string {
-	return *pop.modelArtifact.Name
+	return pop.registeredModel.Name
 }
 
 func (pop *apiPopulator) GetDependencyOf() []string {
@@ -314,6 +374,7 @@ func (pop *apiPopulator) GetDefinition() string {
 }
 
 func (pop *apiPopulator) GetTechdocRef() string {
+	// TODO in theory the kfmr modelcard support when it arrives will influcen this
 	return "api/"
 }
 
@@ -322,7 +383,7 @@ func (pop *apiPopulator) GetTags() []string {
 }
 
 func (pop *apiPopulator) GetLinks() []backstage.EntityLink {
-	return []backstage.EntityLink{}
+	return pop.getLinksFromInferenceServices()
 }
 
 func (pop *apiPopulator) GetDisplayName() string {

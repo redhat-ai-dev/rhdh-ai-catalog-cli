@@ -26,12 +26,12 @@ func TestNewCmd(t *testing.T) {
 		{
 			args:           []string{},
 			generatesError: true,
-			errorStr:       "need to specify an owner and lifecycle setting",
+			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
 			args:           []string{"owner"},
 			generatesError: true,
-			errorStr:       "need to specify an owner and lifecycle setting",
+			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
 			args:   []string{"owner", "lifecycle"},
@@ -78,6 +78,11 @@ metadata:
   annotations:
     backstage.io/techdocs-ref: ./
   description: dummy model 1
+  links:
+  - icon: WebAsset
+    title: version 1
+    type: website
+    url: https://foo.com
   name: model-1
   tags:
   - foo:&{bar MetadataStringValue}
@@ -118,7 +123,7 @@ metadata:
   annotations:
     backstage.io/techdocs-ref: api/
   description: dummy model 1
-  name: model-1-v1-artifact
+  name: model-1
 spec:
   definition: no-definition-yet
   dependencyOf:
@@ -126,7 +131,7 @@ spec:
   lifecycle: lifecycle
   owner: user:kube:admin
   profile:
-    displayName: model-1-v1-artifact
-  type: ""
+    displayName: model-1
+  type: unknown
 `
 )

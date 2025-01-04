@@ -6,11 +6,14 @@ import (
 	"os/user"
 	"path/filepath"
 
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	servingset "github.com/kserve/kserve/pkg/client/clientset/versioned"
 	servingv1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
+	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	appv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -41,6 +44,18 @@ func GetK8sConfig(cfg *config.Config) (*rest.Config, error) {
 
 func GetKServeClient(cfg *rest.Config) servingv1beta1.ServingV1beta1Interface {
 	return servingset.NewForConfigOrDie(cfg).ServingV1beta1()
+}
+
+func GetCoreClient(cfg *rest.Config) corev1.CoreV1Interface {
+	return corev1.NewForConfigOrDie(cfg)
+}
+
+func GetAppClient(cfg *rest.Config) appv1.AppsV1Interface {
+	return appv1.NewForConfigOrDie(cfg)
+}
+
+func GetRouteClient(cfg *rest.Config) routev1.RouteV1Interface {
+	return routev1.NewForConfigOrDie(cfg)
 }
 
 func GetCurrentProject() string {

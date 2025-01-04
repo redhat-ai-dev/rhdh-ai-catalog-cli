@@ -1,13 +1,22 @@
 package cli
 
 import (
+	"context"
+	routev1 "github.com/openshift/api/route/v1"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
+	appv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -218,7 +227,7 @@ func NewCmd() *cobra.Command {
 			if len(args) == 0 {
 				klog.Error("ERROR: delete-model requires a location ID")
 			}
-			processOutput(backstage.SetupBackstageRESTClient(cfg).DeleteLocation(args[0]))
+			util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).DeleteLocation(args[0]))
 		},
 	}
 	importModel := &cobra.Command{
@@ -232,7 +241,193 @@ func NewCmd() *cobra.Command {
 				klog.Flush()
 				return
 			}
-			processOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(args[0]))
+			u, uerr := url.Parse(args[0])
+			if uerr != nil {
+				klog.Errorf("ERROR: import-model requires a valid location URL: %s", uerr.Error())
+				klog.Flush()
+				return
+			}
+			switch u.Scheme {
+			case "http":
+				fallthrough
+			case "https":
+				util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(args[0]))
+				return
+			default:
+				filePath := u.Path
+				var content []byte
+				var fileErr error
+				content, fileErr = os.ReadFile(filePath)
+				if fileErr != nil {
+					klog.Errorf("ERROR: import-model problem reading file %s: %s", filePath, fileErr.Error())
+					klog.Flush()
+					return
+				}
+				restCfg, err := util.GetK8sConfig(cfg)
+				if err != nil {
+					klog.Errorf("ERROR: import-model problem getting k8s rest config: %s", err.Error())
+					klog.Flush()
+					return
+				}
+				ctx := context.Background()
+				coreClient := util.GetCoreClient(restCfg)
+				cm := &corev1.ConfigMap{}
+				cm.Namespace = cfg.Namespace
+				cm.ObjectMeta.GenerateName = "bac-import-model-"
+				cm.BinaryData = map[string][]byte{}
+				cm.BinaryData["catalog-info-yaml"] = content
+				cm, err = coreClient.ConfigMaps(cfg.Namespace).Create(ctx, cm, metav1.CreateOptions{})
+				if err != nil {
+					klog.Errorf("ERROR: import-model problem creating configmap: %s", err.Error())
+					klog.Flush()
+					return
+				}
+				svc := &corev1.Service{}
+				svc.Namespace = cfg.Namespace
+				svc.Name = cm.Name
+				svc.ObjectMeta.Labels = map[string]string{}
+				svc.ObjectMeta.Labels["app"] = cm.Name
+				svc.Spec.Selector = map[string]string{}
+				svc.Spec.Selector["app"] = cm.Name
+				svc.Spec.Ports = []corev1.ServicePort{
+					{
+						Name:     "location",
+						Protocol: corev1.ProtocolTCP,
+						Port:     80,
+						//TargetPort: intstr.FromString("location"),
+						TargetPort: intstr.FromInt32(80),
+					},
+				}
+				svc, err = coreClient.Services(cfg.Namespace).Create(ctx, svc, metav1.CreateOptions{})
+				if err != nil {
+					klog.Errorf("ERROR: import-model problem creating service: %s", err.Error())
+					klog.Flush()
+					return
+				}
+				route := &routev1.Route{}
+				route.Namespace = cfg.Namespace
+				route.Name = cm.Name
+				route.Spec = routev1.RouteSpec{
+					To: routev1.RouteTargetReference{Kind: "Service", Name: svc.Name},
+					//Port: &routev1.RoutePort{TargetPort: intstr.FromInt32(80)},
+					//Port: &routev1.RoutePort{TargetPort: intstr.FromString("location")},
+					//TLS:  &routev1.TLSConfig{Termination: routev1.TLSTerminationEdge, InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
+				}
+				routeClient := util.GetRouteClient(restCfg)
+				route, err = routeClient.Routes(cfg.Namespace).Create(ctx, route, metav1.CreateOptions{})
+				if err != nil {
+					klog.Errorf("ERROR: import-model problem creating route: %s", err.Error())
+					klog.Flush()
+					return
+				}
+				deployment := &appv1.Deployment{}
+				deployment.Namespace = cfg.Namespace
+				deployment.Name = cm.Name
+				deployment.ObjectMeta.Labels = map[string]string{}
+				deployment.ObjectMeta.Labels["app.kubernetes.io/name"] = cm.Name
+				replicas := int32(1)
+				defaultMode := int32(420)
+				pid0 := int64(0)
+				readOnlyFSnonRoot := true
+				deployment.Spec = appv1.DeploymentSpec{
+					Replicas: &replicas,
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"app": cm.Name},
+					},
+					Template: corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"app": cm.Name},
+						},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "location",
+									Image: "quay.io/gabemontero/import-location:latest",
+									Ports: []corev1.ContainerPort{
+										{
+											Name:          "location",
+											ContainerPort: 80,
+										},
+									},
+									Resources: corev1.ResourceRequirements{
+										Limits: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.Quantity{Format: resource.Format("500m")},
+											corev1.ResourceMemory: resource.Quantity{Format: resource.Format("384Mi")},
+										},
+										Requests: corev1.ResourceList{
+											corev1.ResourceCPU:    resource.Quantity{Format: resource.Format("5m")},
+											corev1.ResourceMemory: resource.Quantity{Format: resource.Format("64Mi")},
+										},
+									},
+									SecurityContext: &corev1.SecurityContext{ReadOnlyRootFilesystem: &readOnlyFSnonRoot},
+									VolumeMounts: []corev1.VolumeMount{
+										{
+											Name:      "location",
+											MountPath: "/data",
+											ReadOnly:  true,
+										},
+									},
+								},
+							},
+							SecurityContext: &corev1.PodSecurityContext{RunAsUser: &pid0},
+							Volumes: []corev1.Volume{
+								{
+									Name: "location",
+									VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
+										LocalObjectReference: corev1.LocalObjectReference{Name: cm.Name},
+										DefaultMode:          &defaultMode,
+									}},
+								},
+							},
+						},
+					},
+					Strategy: appv1.DeploymentStrategy{},
+				}
+				appClient := util.GetAppClient(restCfg)
+				deployment, err = appClient.Deployments(cfg.Namespace).Create(ctx, deployment, metav1.CreateOptions{})
+				if err != nil {
+					klog.Errorf("ERROR: import-model problem creating deployment: %s", err.Error())
+					klog.Flush()
+					return
+				}
+				watchTimeOut := int64(120)
+				routeWatch, routeWatchErr := routeClient.Routes(cfg.Namespace).Watch(ctx, metav1.ListOptions{TimeoutSeconds: &watchTimeOut})
+				if routeWatchErr != nil {
+					klog.Errorf("ERROR: import-model problem creating route watch: %s", routeWatchErr.Error())
+					klog.Flush()
+					return
+				}
+				routeURL := ""
+				for event := range routeWatch.ResultChan() {
+					item := event.Object.(*routev1.Route)
+					if item.Name != route.Name {
+						continue
+					}
+
+					switch event.Type {
+					case watch.Error:
+						fallthrough
+					case watch.Deleted:
+						routeWatch.Stop()
+						break
+					}
+
+					if len(item.Status.Ingress) == 0 {
+						continue
+					}
+					if len(item.Status.Ingress[0].Conditions) == 0 {
+						continue
+					}
+
+					if item.Status.Ingress[0].Conditions[0].Status == corev1.ConditionTrue {
+						routeURL = "http://" + item.Status.Ingress[0].Host
+						break
+					}
+
+				}
+				util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(routeURL))
+			}
+
 		},
 	}
 
@@ -249,7 +444,7 @@ func NewCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			str, err := backstage.SetupBackstageRESTClient(cfg).ListEntities()
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 
 		},
@@ -262,7 +457,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getLocationsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetLocation(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -274,7 +469,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getComponentsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetComponent(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -286,7 +481,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getResourcesExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetResource(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -298,7 +493,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getApisExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetAPI(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -309,13 +504,4 @@ func NewCmd() *cobra.Command {
 		"When set with 'use-params-as-tags', this just requires the tags provided to be set, but allows for additional tags to be set")
 
 	return bkstgAI
-}
-
-func processOutput(str string, err error) {
-	klog.Infoln(str)
-	klog.Flush()
-	if err != nil {
-		klog.Errorf("%s", err.Error())
-		klog.Flush()
-	}
 }

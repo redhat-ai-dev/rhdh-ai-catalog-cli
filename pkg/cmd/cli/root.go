@@ -293,9 +293,9 @@ func NewCmd() *cobra.Command {
 					{
 						Name:     "location",
 						Protocol: corev1.ProtocolTCP,
-						Port:     80,
+						Port:     8080,
 						//TargetPort: intstr.FromString("location"),
-						TargetPort: intstr.FromInt32(80),
+						TargetPort: intstr.FromInt32(8080),
 					},
 				}
 				svc, err = coreClient.Services(cfg.Namespace).Create(ctx, svc, metav1.CreateOptions{})
@@ -327,7 +327,7 @@ func NewCmd() *cobra.Command {
 				deployment.ObjectMeta.Labels["app.kubernetes.io/name"] = cm.Name
 				replicas := int32(1)
 				defaultMode := int32(420)
-				pid0 := int64(0)
+				//pid0 := int64(0)
 				readOnlyFSnonRoot := true
 				deployment.Spec = appv1.DeploymentSpec{
 					Replicas: &replicas,
@@ -342,11 +342,11 @@ func NewCmd() *cobra.Command {
 							Containers: []corev1.Container{
 								{
 									Name:  "location",
-									Image: "quay.io/gabemontero/import-location:latest",
+									Image: "quay.io/gabemontero/import-location:v2",
 									Ports: []corev1.ContainerPort{
 										{
 											Name:          "location",
-											ContainerPort: 80,
+											ContainerPort: 8080,
 										},
 									},
 									Resources: corev1.ResourceRequirements{
@@ -369,7 +369,7 @@ func NewCmd() *cobra.Command {
 									},
 								},
 							},
-							SecurityContext: &corev1.PodSecurityContext{RunAsUser: &pid0},
+							SecurityContext: &corev1.PodSecurityContext{RunAsNonRoot: &readOnlyFSnonRoot},
 							Volumes: []corev1.Volume{
 								{
 									Name: "location",

@@ -1,12 +1,10 @@
 package gin_gonic_http_srv
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"k8s.io/klog/v2"
 	"net/http"
-	"time"
 )
 
 type ImportLocationServer struct {
@@ -40,41 +38,22 @@ func addRequestId() gin.HandlerFunc {
 }
 
 func (i *ImportLocationServer) Run(stopCh <-chan struct{}) {
-	//err := i.router.Run(":80")
-	//if err != nil {
-	//	klog.Errorf("ERROR: gin-gonic run error %s", err.Error())
-	//}
-
-	//go func() {
-	//	for {
-	//		select {
-	//		case <-stopCh:
-	//			return
-	//		default:
-	//			err := i.router.Run(":8080")
-	//			if err != nil {
-	//				klog.Errorf("ERROR: gin-gonic run error %s", err.Error())
-	//			}
-	//		}
-	//	}
-	//}()
-	//<-stopCh
-
-	srv := &http.Server{
-		Addr:    ":80",
-		Handler: i.router,
-	}
+	ch := make(chan int)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			klog.Errorf("ERROR: import-location http srv error: %s", err.Error())
+		for {
+			select {
+			case <-ch:
+				return
+			default:
+				err := i.router.Run(":8080")
+				if err != nil {
+					klog.Errorf("ERROR: gin-gonic run error %s", err.Error())
+				}
+			}
 		}
 	}()
 	<-stopCh
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		klog.Errorf("Error: import-location http srv shutdown error: %s", err.Error())
-	}
+	close(ch)
 }
 
 func (i *ImportLocationServer) handleCatalogInfoGet(c *gin.Context) {

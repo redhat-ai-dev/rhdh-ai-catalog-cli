@@ -341,8 +341,9 @@ func NewCmd() *cobra.Command {
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{
-									Name:  "location",
-									Image: "quay.io/gabemontero/import-location:v2",
+									Name:            "location",
+									Image:           "quay.io/gabemontero/import-location:latest",
+									ImagePullPolicy: corev1.PullAlways,
 									Ports: []corev1.ContainerPort{
 										{
 											Name:          "location",

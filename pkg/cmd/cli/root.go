@@ -273,7 +273,7 @@ func NewCmd() *cobra.Command {
 				coreClient := util.GetCoreClient(restCfg)
 				cm := &corev1.ConfigMap{}
 				cm.Namespace = cfg.Namespace
-				cm.ObjectMeta.GenerateName = "bac-import-model-"
+				cm.Name = "bac-import-model"
 				cm.BinaryData = map[string][]byte{}
 				cm.BinaryData["catalog-info-yaml"] = content
 				cm, err = coreClient.ConfigMaps(cfg.Namespace).Create(ctx, cm, metav1.CreateOptions{})
@@ -421,7 +421,7 @@ func NewCmd() *cobra.Command {
 					}
 
 					if item.Status.Ingress[0].Conditions[0].Status == corev1.ConditionTrue {
-						routeURL = "http://" + item.Status.Ingress[0].Host
+						routeURL = "http://" + item.Status.Ingress[0].Host + "/catalog-info.yaml"
 						break
 					}
 

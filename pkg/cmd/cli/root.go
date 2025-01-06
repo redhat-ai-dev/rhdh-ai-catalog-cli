@@ -2,19 +2,13 @@ package cli
 
 import (
 	"context"
-	routev1 "github.com/openshift/api/route/v1"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/gin-gonic-http/client"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
-	appv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 	"net/url"
 	"os"
@@ -263,170 +257,37 @@ func NewCmd() *cobra.Command {
 					klog.Flush()
 					return
 				}
-				restCfg, err := util.GetK8sConfig(cfg)
-				if err != nil {
-					klog.Errorf("ERROR: import-model problem getting k8s rest config: %s", err.Error())
-					klog.Flush()
-					return
-				}
 				ctx := context.Background()
-				coreClient := util.GetCoreClient(restCfg)
-				cm := &corev1.ConfigMap{}
-				cm.Namespace = cfg.Namespace
-				cm.Name = "bac-import-model"
-				cm.BinaryData = map[string][]byte{}
-				cm.BinaryData["catalog-info-yaml"] = content
-				cm, err = coreClient.ConfigMaps(cfg.Namespace).Create(ctx, cm, metav1.CreateOptions{})
+				artifacts := client.NewArtifacts(ctx, content, cfg)
+				err := artifacts.Delete()
 				if err != nil {
-					klog.Errorf("ERROR: import-model problem creating configmap: %s", err.Error())
+					klog.Errorf("ERROR: import-model: %s", err.Error())
 					klog.Flush()
 					return
 				}
-				svc := &corev1.Service{}
-				svc.Namespace = cfg.Namespace
-				svc.Name = cm.Name
-				svc.ObjectMeta.Labels = map[string]string{}
-				svc.ObjectMeta.Labels["app"] = cm.Name
-				svc.Spec.Selector = map[string]string{}
-				svc.Spec.Selector["app"] = cm.Name
-				svc.Spec.Ports = []corev1.ServicePort{
-					{
-						Name:     "location",
-						Protocol: corev1.ProtocolTCP,
-						Port:     8080,
-						//TargetPort: intstr.FromString("location"),
-						TargetPort: intstr.FromInt32(8080),
-					},
-				}
-				svc, err = coreClient.Services(cfg.Namespace).Create(ctx, svc, metav1.CreateOptions{})
+				err = artifacts.Create()
 				if err != nil {
-					klog.Errorf("ERROR: import-model problem creating service: %s", err.Error())
+					klog.Errorf("ERROR: import-model: %s", err.Error())
 					klog.Flush()
 					return
 				}
-				route := &routev1.Route{}
-				route.Namespace = cfg.Namespace
-				route.Name = cm.Name
-				route.Spec = routev1.RouteSpec{
-					To: routev1.RouteTargetReference{Kind: "Service", Name: svc.Name},
-					//Port: &routev1.RoutePort{TargetPort: intstr.FromInt32(80)},
-					//Port: &routev1.RoutePort{TargetPort: intstr.FromString("location")},
-					//TLS:  &routev1.TLSConfig{Termination: routev1.TLSTerminationEdge, InsecureEdgeTerminationPolicy: routev1.InsecureEdgeTerminationPolicyAllow},
-				}
-				routeClient := util.GetRouteClient(restCfg)
-				route, err = routeClient.Routes(cfg.Namespace).Create(ctx, route, metav1.CreateOptions{})
+				err = artifacts.Ready()
 				if err != nil {
-					klog.Errorf("ERROR: import-model problem creating route: %s", err.Error())
+					klog.Errorf("ERROR: import-model: %s", err.Error())
 					klog.Flush()
 					return
 				}
-				deployment := &appv1.Deployment{}
-				deployment.Namespace = cfg.Namespace
-				deployment.Name = cm.Name
-				deployment.ObjectMeta.Labels = map[string]string{}
-				deployment.ObjectMeta.Labels["app.kubernetes.io/name"] = cm.Name
-				replicas := int32(1)
-				defaultMode := int32(420)
-				//pid0 := int64(0)
-				readOnlyFSnonRoot := true
-				deployment.Spec = appv1.DeploymentSpec{
-					Replicas: &replicas,
-					Selector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{"app": cm.Name},
-					},
-					Template: corev1.PodTemplateSpec{
-						ObjectMeta: metav1.ObjectMeta{
-							Labels: map[string]string{"app": cm.Name},
-						},
-						Spec: corev1.PodSpec{
-							Containers: []corev1.Container{
-								{
-									Name:            "location",
-									Image:           "quay.io/gabemontero/import-location:latest",
-									ImagePullPolicy: corev1.PullAlways,
-									Ports: []corev1.ContainerPort{
-										{
-											Name:          "location",
-											ContainerPort: 8080,
-										},
-									},
-									Resources: corev1.ResourceRequirements{
-										Limits: corev1.ResourceList{
-											corev1.ResourceCPU:    resource.Quantity{Format: resource.Format("500m")},
-											corev1.ResourceMemory: resource.Quantity{Format: resource.Format("384Mi")},
-										},
-										Requests: corev1.ResourceList{
-											corev1.ResourceCPU:    resource.Quantity{Format: resource.Format("5m")},
-											corev1.ResourceMemory: resource.Quantity{Format: resource.Format("64Mi")},
-										},
-									},
-									SecurityContext: &corev1.SecurityContext{ReadOnlyRootFilesystem: &readOnlyFSnonRoot},
-									VolumeMounts: []corev1.VolumeMount{
-										{
-											Name:      "location",
-											MountPath: "/data",
-											ReadOnly:  true,
-										},
-									},
-								},
-							},
-							SecurityContext: &corev1.PodSecurityContext{RunAsNonRoot: &readOnlyFSnonRoot},
-							Volumes: []corev1.Volume{
-								{
-									Name: "location",
-									VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
-										LocalObjectReference: corev1.LocalObjectReference{Name: cm.Name},
-										DefaultMode:          &defaultMode,
-									}},
-								},
-							},
-						},
-					},
-					Strategy: appv1.DeploymentStrategy{},
-				}
-				appClient := util.GetAppClient(restCfg)
-				deployment, err = appClient.Deployments(cfg.Namespace).Create(ctx, deployment, metav1.CreateOptions{})
-				if err != nil {
-					klog.Errorf("ERROR: import-model problem creating deployment: %s", err.Error())
-					klog.Flush()
-					return
-				}
-				watchTimeOut := int64(120)
-				routeWatch, routeWatchErr := routeClient.Routes(cfg.Namespace).Watch(ctx, metav1.ListOptions{TimeoutSeconds: &watchTimeOut})
-				if routeWatchErr != nil {
-					klog.Errorf("ERROR: import-model problem creating route watch: %s", routeWatchErr.Error())
-					klog.Flush()
-					return
-				}
-				routeURL := ""
-				for event := range routeWatch.ResultChan() {
-					item := event.Object.(*routev1.Route)
-					if item.Name != route.Name {
-						continue
-					}
-
-					switch event.Type {
-					case watch.Error:
-						fallthrough
-					case watch.Deleted:
-						routeWatch.Stop()
-						break
-					}
-
-					if len(item.Status.Ingress) == 0 {
-						continue
-					}
-					if len(item.Status.Ingress[0].Conditions) == 0 {
-						continue
-					}
-
-					if item.Status.Ingress[0].Conditions[0].Status == corev1.ConditionTrue {
-						routeURL = "http://" + item.Status.Ingress[0].Host + "/catalog-info.yaml"
-						break
-					}
-
-				}
-				util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(routeURL))
+				artifacts.Import()
+				//TODO general wonkiness can occur if we delete the location, we unregister it, and then we re-create
+				// so we'll want to accelerate https; setting names could be a thing, though the administrator can
+				// just create additional namespaces as needed
+				//time.Sleep(30 * time.Second)
+				//err = artifacts.Delete()
+				//if err != nil {
+				//	klog.Errorf("ERROR: import-model: %s", err.Error())
+				//	klog.Flush()
+				//	return
+				//}
 			}
 
 		},

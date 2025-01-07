@@ -278,8 +278,9 @@ func NewCmd() *cobra.Command {
 					return
 				}
 				artifacts.Import()
-				//TODO general wonkiness can occur if we delete the location, we unregister it, and then we re-create
-				// so we'll want to accelerate https; setting names could be a thing, though the administrator can
+				//TODO - there seems to be a delay between our import here and the catalog entries becoming visible from the UI or CLI.  Also, the location ID does not show up in the entity dump, but the uid or name does not work with 'bac delete-model ...'.  You have to save the location ID returned from the original import and use that to delete once the entries show up.
+				//TODO - hence, feels like we cannot delete our http server in line.  If we want to delete , may need to define a job for post CLI processing  that does it after we see the entries in the catalog.
+				//TODO - oterwise, if we keep the http server up, we'll want to accelerate https; setting names of our objs could be a thing, though the administrator can
 				// just create additional namespaces as needed
 				//time.Sleep(30 * time.Second)
 				//err = artifacts.Delete()

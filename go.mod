@@ -11,7 +11,7 @@ require (
 	k8s.io/apimachinery v0.28.4
 	k8s.io/cli-runtime v0.28.4
 	k8s.io/client-go v0.28.4
-	k8s.io/klog/v2 v2.110.1
+	k8s.io/klog/v2 v2.130.1
 	k8s.io/kubectl v0.28.4
 	knative.dev/pkg v0.0.0-20231115001034-97c7258e3a98
 	sigs.k8s.io/yaml v1.4.0

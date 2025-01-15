@@ -155,6 +155,7 @@ type Client struct {
 	panicHooks          []ErrorHook
 	rateLimiter         RateLimiter
 	generateCurlOnDebug bool
+	unescapeQueryParams bool
 }
 
 // User type is to hold an username and password information
@@ -325,6 +326,17 @@ func (c *Client) SetQueryParams(params map[string]string) *Client {
 	return c
 }
 
+// SetUnescapeQueryParams method sets the unescape query parameters choice for request URL.
+// To prevent broken URL, resty replaces space (" ") with "+" in the query parameters.
+//
+// See [Request.SetUnescapeQueryParams]
+//
+// NOTE: Request failure is possible due to non-standard usage of Unescaped Query Parameters.
+func (c *Client) SetUnescapeQueryParams(unescape bool) *Client {
+	c.unescapeQueryParams = unescape
+	return c
+}
+
 // SetFormData method sets Form parameters and their values in the client instance.
 // It applies only to HTTP methods `POST` and `PUT`, and the request content type would be set as
 // `application/x-www-form-urlencoded`. These form data will be added to all the requests raised from
@@ -446,6 +458,7 @@ func (c *Client) R() *Request {
 		log:                 c.log,
 		responseBodyLimit:   c.ResponseBodyLimit,
 		generateCurlOnDebug: c.generateCurlOnDebug,
+		unescapeQueryParams: c.unescapeQueryParams,
 	}
 	return r
 }
@@ -1223,7 +1236,6 @@ func (c *Client) executeBefore(req *Request) error {
 		return wrapNoRetryErr(err)
 	}
 
-	req.RawRequest.Body = newRequestBodyReleaser(req.RawRequest.Body, req.bodyBuf)
 	return nil
 }
 
@@ -1243,12 +1255,14 @@ func (c *Client) execute(req *Request) (*Response, error) {
 	}
 
 	if err != nil || req.notParseResponse || c.notParseResponse {
-		logErr := responseLogger(c, response)
 		response.setReceivedAt()
-		if err != nil {
-			return response, errors.Join(err, logErr)
+		if logErr := responseLogger(c, response); logErr != nil {
+			return response, wrapErrors(logErr, err)
 		}
-		return response, wrapNoRetryErr(logErr)
+		if err != nil {
+			return response, err
+		}
+		return response, nil
 	}
 
 	if !req.isSaveResponse {
@@ -1260,7 +1274,7 @@ func (c *Client) execute(req *Request) (*Response, error) {
 			if _, ok := body.(*gzip.Reader); !ok {
 				body, err = gzip.NewReader(body)
 				if err != nil {
-					err = errors.Join(err, responseLogger(c, response))
+					err = wrapErrors(responseLogger(c, response), err)
 					response.setReceivedAt()
 					return response, err
 				}
@@ -1269,7 +1283,7 @@ func (c *Client) execute(req *Request) (*Response, error) {
 		}
 
 		if response.body, err = readAllWithLimit(body, req.responseBodyLimit); err != nil {
-			err = errors.Join(err, responseLogger(c, response))
+			err = wrapErrors(responseLogger(c, response), err)
 			response.setReceivedAt()
 			return response, err
 		}

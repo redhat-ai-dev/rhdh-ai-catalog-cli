@@ -3,7 +3,7 @@ module github.com/redhat-ai-dev/rhdh-ai-catalog-cli
 go 1.23.2
 
 require (
-	github.com/go-resty/resty/v2 v2.15.0
+	github.com/go-resty/resty/v2 v2.16.3
 	github.com/kserve/kserve v0.13.1
 	github.com/kubeflow/model-registry v0.2.5-alpha
 	github.com/spf13/cobra v1.8.1

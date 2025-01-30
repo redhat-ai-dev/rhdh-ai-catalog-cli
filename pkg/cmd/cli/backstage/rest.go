@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/go-resty/resty/v2"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"k8s.io/klog/v2"
 	nurl "net/url"
 	"os"
@@ -104,6 +104,13 @@ func (k *BackstageRESTClientWrapper) postToBackstage(url string, body interface{
 	resp, err := backstageRESTClient.RESTClient.R().SetAuthToken(k.Token).SetBody(body).SetHeader("Accept", "application/json").Post(url)
 	if err != nil {
 		return "", err
+	}
+	rc := resp.StatusCode()
+	if rc != 200 && rc != 201 {
+		return "", fmt.Errorf("post for %s rc %d body %s\n", url, rc, resp.String())
+	} else {
+		klog.V(4).Infof("post for %s returned ok\n", url)
+
 	}
 
 	return k.processUpdate(resp, "post", url, fmt.Sprintf("%#v", body))

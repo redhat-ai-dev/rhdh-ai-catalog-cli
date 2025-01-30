@@ -34,7 +34,7 @@ func (b *BackstageRESTClientWrapper) GetLocation(args ...string) (string, error)
 }
 
 func (b *BackstageRESTClientWrapper) ImportLocation(url string) (string, error) {
-	return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "url"})
+	return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "rhdh-rhoai-bridge"})
 }
 
 func (b *BackstageRESTClientWrapper) DeleteLocation(id string) (string, error) {

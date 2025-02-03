@@ -47,7 +47,7 @@ func (a *Artifacts) Ready() error {
 		}
 
 		if item.Status.Ingress[0].Conditions[0].Status == corev1.ConditionTrue {
-			a.routeURL = "http://" + item.Status.Ingress[0].Host + "/catalog-info.yaml"
+			a.routeURL = "http://" + item.Status.Ingress[0].Host
 			return nil
 		}
 

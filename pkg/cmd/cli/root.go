@@ -248,49 +248,74 @@ func NewCmd() *cobra.Command {
 				util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(args[0]))
 				return
 			default:
-				filePath := u.Path
-				var content []byte
-				var fileErr error
-				content, fileErr = os.ReadFile(filePath)
-				if fileErr != nil {
-					klog.Errorf("ERROR: import-model problem reading file %s: %s", filePath, fileErr.Error())
-					klog.Flush()
-					return
-				}
-				ctx := context.Background()
-				artifacts := client.NewArtifacts(ctx, content, cfg)
-				err := artifacts.Delete()
-				if err != nil {
-					klog.Errorf("ERROR: import-model: %s", err.Error())
-					klog.Flush()
-					return
-				}
-				err = artifacts.Create()
-				if err != nil {
-					klog.Errorf("ERROR: import-model: %s", err.Error())
-					klog.Flush()
-					return
-				}
-				err = artifacts.Ready()
-				if err != nil {
-					klog.Errorf("ERROR: import-model: %s", err.Error())
-					klog.Flush()
-					return
-				}
-				artifacts.Import()
-				//TODO - there seems to be a delay between our import here and the catalog entries becoming visible from the UI or CLI.  Also, the location ID does not show up in the entity dump, but the uid or name does not work with 'bac delete-model ...'.  You have to save the location ID returned from the original import and use that to delete once the entries show up.
-				//TODO - hence, feels like we cannot delete our http server in line.  If we want to delete , may need to define a job for post CLI processing  that does it after we see the entries in the catalog.
-				//TODO - oterwise, if we keep the http server up, we'll want to accelerate https; setting names of our objs could be a thing, though the administrator can
-				// just create additional namespaces as needed
-				//time.Sleep(30 * time.Second)
-				//err = artifacts.Delete()
-				//if err != nil {
-				//	klog.Errorf("ERROR: import-model: %s", err.Error())
-				//	klog.Flush()
-				//	return
-				//}
+				klog.Errorf("ERROR: import-model only supports http and https prototype scheme URLs")
 			}
 
+		},
+	}
+
+	startBridge := &cobra.Command{
+		Use:     "start-bridge",
+		Aliases: []string{"sb"},
+		Long:    "start-bridge launches a REST API based service and K8s controller that serves as a normalization tier between Backstage and various AI model metadata systems.",
+		Example: "",
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+			artifacts := client.NewArtifacts(ctx /*[]byte{},*/, cfg)
+			err := artifacts.Delete()
+			if err != nil {
+				klog.Errorf("ERROR: import-model: %s", err.Error())
+				klog.Flush()
+				return
+			}
+			err = artifacts.Create()
+			if err != nil {
+				klog.Errorf("ERROR: import-model: %s", err.Error())
+				klog.Flush()
+				return
+			}
+			err = artifacts.Ready()
+			if err != nil {
+				klog.Errorf("ERROR: import-model: %s", err.Error())
+				klog.Flush()
+				return
+			}
+
+		},
+	}
+
+	addBridgeContent := &cobra.Command{
+		Use:     "add-bridge-content",
+		Aliases: []string{"abc"},
+		Long:    "add-bridge-content updates the set of catalog-info.yaml files the bridge's REST API will return.",
+		// remember k8s CM keys can only contain alphanumerics and the '.', '-', and '_' symbols ... mention this in the help
+		Example: "",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) < 3 {
+				klog.Errorf("ERROR: need 'model-source string parameter, model-version string parameter, and local catalog-info.yaml file parameter")
+			}
+			u, uerr := url.Parse(args[2])
+			if uerr != nil {
+				klog.Errorf("ERROR: add-bridge-content given invalid catalog-info.yaml file location URL: %s", uerr.Error())
+				klog.Flush()
+				return
+			}
+			filePath := u.Path
+			var content []byte
+			var fileErr error
+			content, fileErr = os.ReadFile(filePath)
+			if fileErr != nil {
+				klog.Errorf("ERROR: add-bridge-content problem reading file %s: %s", filePath, fileErr.Error())
+				klog.Flush()
+				return
+			}
+			ctx := context.Background()
+			artifacts := client.NewArtifacts(ctx, cfg)
+			err := artifacts.AddContent(args[0]+"_"+args[1], content)
+			if err != nil {
+				klog.Errorf("ERROR: add-bridge-content problem adding content: %s", err.Error())
+				klog.Flush()
+			}
 		},
 	}
 
@@ -298,6 +323,8 @@ func NewCmd() *cobra.Command {
 	bkstgAI.AddCommand(queryModel)
 	bkstgAI.AddCommand(deleteModel)
 	bkstgAI.AddCommand(importModel)
+	bkstgAI.AddCommand(startBridge)
+	bkstgAI.AddCommand(addBridgeContent)
 
 	queryModel.AddCommand(&cobra.Command{
 		Use:     "entities",

@@ -1,29 +1,42 @@
 package server
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"k8s.io/klog/v2"
 	"net/http"
+	"strings"
 )
 
 type ImportLocationServer struct {
 	router  *gin.Engine
-	content []byte
+	content map[string][]byte
 }
 
-func NewImportLocationServer(content []byte) *ImportLocationServer {
+func NewImportLocationServer(content map[string][]byte) *ImportLocationServer {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	i := &ImportLocationServer{
 		router:  r,
 		content: content,
 	}
+	klog.Infof("NewImportLocationServer content len %d", len(content))
 	r.SetTrustedProxies(nil)
 	r.TrustedPlatform = "X-Forwarded-For"
 	r.Use(addRequestId())
-	r.GET("/", i.handleCatalogInfoGet)
-	r.GET("/catalog-info.yaml", i.handleCatalogInfoGet)
+	for key, data := range content {
+		klog.Infof("NewImportLocationServer looking at key %s and content len %d", key, len(data))
+		il := &ImportLocation{content: data}
+		segs := strings.Split(key, "_")
+		if len(segs) < 2 {
+			continue
+		}
+		uri := fmt.Sprintf("%s/%s/catalog-info.yaml", segs[0], segs[1])
+		klog.Infoln("Adding URI " + uri)
+		r.GET(uri, il.handleCatalogInfoGet)
+	}
+	//TODO can also provide a POST URI for adding ImportLocations
 	return i
 }
 
@@ -56,6 +69,10 @@ func (i *ImportLocationServer) Run(stopCh <-chan struct{}) {
 	close(ch)
 }
 
-func (i *ImportLocationServer) handleCatalogInfoGet(c *gin.Context) {
+type ImportLocation struct {
+	content []byte
+}
+
+func (i *ImportLocation) handleCatalogInfoGet(c *gin.Context) {
 	c.Data(http.StatusOK, "Content-Type: application/json", i.content)
 }

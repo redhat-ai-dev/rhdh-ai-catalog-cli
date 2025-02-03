@@ -3,6 +3,7 @@ package backstage
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 )
 
 func (b *BackstageRESTClientWrapper) ListLocations() (string, error) {
@@ -34,6 +35,9 @@ func (b *BackstageRESTClientWrapper) GetLocation(args ...string) (string, error)
 }
 
 func (b *BackstageRESTClientWrapper) ImportLocation(url string) (string, error) {
+	if strings.Contains(url, "github") {
+		return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "url"})
+	}
 	return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "rhdh-rhoai-bridge"})
 }
 

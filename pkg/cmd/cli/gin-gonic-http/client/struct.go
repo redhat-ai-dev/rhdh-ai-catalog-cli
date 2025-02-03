@@ -21,24 +21,27 @@ type Artifacts struct {
 	routeURL string
 }
 
-func NewArtifacts(ctx context.Context, content []byte, cfg *config.Config) *Artifacts {
+func NewArtifacts(ctx context.Context /*content []byte,*/, cfg *config.Config) *Artifacts {
 	a := &Artifacts{}
 	a.ctx = ctx
 	a.cfg = cfg
 
-	a.cm = &corev1.ConfigMap{}
-	a.cm.Namespace = a.cfg.Namespace
-	a.cm.Name = "bac-import-model"
-	a.cm.BinaryData = map[string][]byte{}
-	a.cm.BinaryData["catalog-info-yaml"] = content
+	name := "bac-import-model"
+	//a.cm = &corev1.ConfigMap{}
+	//a.cm.Namespace = a.cfg.Namespace
+	//a.cm.Name = "bac-import-model"
+	//if len(content) > 0 {
+	//	a.cm.BinaryData = map[string][]byte{}
+	//	a.cm.BinaryData["catalog-info-yaml"] = content
+	//}
 
 	a.svc = &corev1.Service{}
 	a.svc.Namespace = a.cfg.Namespace
-	a.svc.Name = a.cm.Name
+	a.svc.Name = name
 	a.svc.ObjectMeta.Labels = map[string]string{}
-	a.svc.ObjectMeta.Labels["app"] = a.cm.Name
+	a.svc.ObjectMeta.Labels["app"] = name
 	a.svc.Spec.Selector = map[string]string{}
-	a.svc.Spec.Selector["app"] = a.cm.Name
+	a.svc.Spec.Selector["app"] = name
 	a.svc.Spec.Ports = []corev1.ServicePort{
 		{
 			Name:     "location",
@@ -51,27 +54,27 @@ func NewArtifacts(ctx context.Context, content []byte, cfg *config.Config) *Arti
 
 	a.route = &routev1.Route{}
 	a.route.Namespace = a.cfg.Namespace
-	a.route.Name = a.cm.Name
+	a.route.Name = name
 	a.route.Spec = routev1.RouteSpec{
 		To: routev1.RouteTargetReference{Kind: "Service", Name: a.svc.Name},
 	}
 
 	a.dpm = &appv1.Deployment{}
 	a.dpm.Namespace = a.cfg.Namespace
-	a.dpm.Name = a.cm.Name
+	a.dpm.Name = name
 	a.dpm.ObjectMeta.Labels = map[string]string{}
-	a.dpm.ObjectMeta.Labels["app.kubernetes.io/name"] = a.cm.Name
+	a.dpm.ObjectMeta.Labels["app.kubernetes.io/name"] = name
 	replicas := int32(1)
 	defaultMode := int32(420)
 	readOnlyFSnonRoot := true
 	a.dpm.Spec = appv1.DeploymentSpec{
 		Replicas: &replicas,
 		Selector: &metav1.LabelSelector{
-			MatchLabels: map[string]string{"app": a.cm.Name},
+			MatchLabels: map[string]string{"app": name},
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
-				Labels: map[string]string{"app": a.cm.Name},
+				Labels: map[string]string{"app": name},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
@@ -110,7 +113,7 @@ func NewArtifacts(ctx context.Context, content []byte, cfg *config.Config) *Arti
 					{
 						Name: "location",
 						VolumeSource: corev1.VolumeSource{ConfigMap: &corev1.ConfigMapVolumeSource{
-							LocalObjectReference: corev1.LocalObjectReference{Name: a.cm.Name},
+							LocalObjectReference: corev1.LocalObjectReference{Name: name},
 							DefaultMode:          &defaultMode,
 						}},
 					},

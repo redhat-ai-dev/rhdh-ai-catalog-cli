@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -25,6 +26,7 @@ func NewImportLocationServer(content map[string][]byte) *ImportLocationServer {
 	r.SetTrustedProxies(nil)
 	r.TrustedPlatform = "X-Forwarded-For"
 	r.Use(addRequestId())
+	d := &DicoveryResponse{Uris: []string{}}
 	for key, data := range content {
 		klog.Infof("NewImportLocationServer looking at key %s and content len %d", key, len(data))
 		il := &ImportLocation{content: data}
@@ -35,7 +37,9 @@ func NewImportLocationServer(content map[string][]byte) *ImportLocationServer {
 		uri := fmt.Sprintf("%s/%s/catalog-info.yaml", segs[0], segs[1])
 		klog.Infoln("Adding URI " + uri)
 		r.GET(uri, il.handleCatalogInfoGet)
+		d.Uris = append(d.Uris, uri)
 	}
+	r.GET("/list", d.handleCatalogDiscoveryGet)
 	//TODO can also provide a POST URI for adding ImportLocations
 	return i
 }
@@ -75,4 +79,18 @@ type ImportLocation struct {
 
 func (i *ImportLocation) handleCatalogInfoGet(c *gin.Context) {
 	c.Data(http.StatusOK, "Content-Type: application/json", i.content)
+}
+
+type DicoveryResponse struct {
+	Uris []string `json:"uris"`
+}
+
+func (d *DicoveryResponse) handleCatalogDiscoveryGet(c *gin.Context) {
+	content, err := json.Marshal(d)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		c.Error(err)
+		return
+	}
+	c.Data(http.StatusOK, "Content-Type: application/json", content)
 }

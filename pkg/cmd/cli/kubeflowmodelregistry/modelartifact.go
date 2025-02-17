@@ -19,3 +19,17 @@ func (k *KubeFlowRESTClientWrapper) ListModelArtifacts(id string) ([]openapi.Mod
 	}
 	return mas.Items, err
 }
+
+func (k *KubeFlowRESTClientWrapper) GetModelArtifact(id string) (*openapi.ModelArtifact, error) {
+	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(GET_MODEL_ARTIFACT_URI, id))
+	if err != nil {
+		return nil, err
+	}
+
+	ma := openapi.ModelArtifact{}
+	err = json.Unmarshal(buf, &ma)
+	if err != nil {
+		return nil, err
+	}
+	return &ma, err
+}

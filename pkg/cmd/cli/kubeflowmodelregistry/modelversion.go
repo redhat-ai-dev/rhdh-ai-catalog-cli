@@ -19,3 +19,17 @@ func (k *KubeFlowRESTClientWrapper) ListModelVersions(id string) ([]openapi.Mode
 	}
 	return mvs.Items, err
 }
+
+func (k *KubeFlowRESTClientWrapper) GetModelVersions(id string) (*openapi.ModelVersion, error) {
+	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(GET_MODEL_VERSION_URI, id))
+	if err != nil {
+		return nil, err
+	}
+
+	mv := openapi.ModelVersion{}
+	err = json.Unmarshal(buf, &mv)
+	if err != nil {
+		return nil, err
+	}
+	return &mv, err
+}

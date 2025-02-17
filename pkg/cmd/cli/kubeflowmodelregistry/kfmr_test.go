@@ -29,16 +29,16 @@ func TestNewCmd(t *testing.T) {
 			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
-			args:           []string{"owner"},
+			args:           []string{"Owner"},
 			generatesError: true,
 			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
-			args:   []string{"owner", "lifecycle"},
+			args:   []string{"Owner", "Lifecycle"},
 			outStr: []string{listOutput},
 		},
 		{
-			args:   []string{"owner", "lifecycle", "1"},
+			args:   []string{"Owner", "Lifecycle", "1"},
 			outStr: []string{listOutput},
 		},
 	} {
@@ -85,12 +85,12 @@ metadata:
     url: https://foo.com
   name: model-1
   tags:
-  - foo:&{bar MetadataStringValue}
+  - foo-bar
 spec:
   dependsOn:
   - resource:v1
   - api:model-1-v1-artifact
-  lifecycle: lifecycle
+  lifecycle: Lifecycle
   owner: user:kube:admin
   profile:
     displayName: model-1
@@ -111,7 +111,7 @@ metadata:
 spec:
   dependencyOf:
   - component:model-1
-  lifecycle: lifecycle
+  lifecycle: Lifecycle
   owner: user:kube:admin
   profile:
     displayName: v1
@@ -128,7 +128,7 @@ spec:
   definition: no-definition-yet
   dependencyOf:
   - component:model-1
-  lifecycle: lifecycle
+  lifecycle: Lifecycle
   owner: user:kube:admin
   profile:
     displayName: model-1

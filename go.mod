@@ -4,6 +4,7 @@ go 1.22.9
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-logr/logr v1.4.2
 	github.com/go-resty/resty/v2 v2.16.3
 	github.com/google/uuid v1.6.0
 	github.com/kserve/kserve v0.14.1
@@ -13,12 +14,14 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.31.4
+	k8s.io/apiextensions-apiserver v0.31.0
 	k8s.io/apimachinery v0.31.4
 	k8s.io/cli-runtime v0.31.4
 	k8s.io/client-go v0.31.4
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/kubectl v0.31.4
 	knative.dev/pkg v0.0.0-20241223131119-4c901591eb4a
+	sigs.k8s.io/controller-runtime v0.19.3
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -50,8 +53,8 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
@@ -117,6 +120,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
@@ -141,7 +145,6 @@ require (
 	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6 // indirect
 	knative.dev/networking v0.0.0-20240815142417-37fdbdd0854b // indirect
 	knative.dev/serving v0.42.2 // indirect
-	sigs.k8s.io/controller-runtime v0.19.3 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.17.2 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.17.1 // indirect

@@ -18,6 +18,8 @@ const (
 	LIST_INFERENCE_SERVICES_URI      = "/inference_services"
 	LIST_REG_MODEL_URI               = "/registered_models"
 	GET_SERVING_ENV_URI              = "/serving_environments/%s"
+	GET_MODEL_ARTIFACT_URI           = "/model_artifacts/%s"
+	GET_MODEL_VERSION_URI            = "/model_versions/%s"
 )
 
 type KubeFlowRESTClientWrapper struct {

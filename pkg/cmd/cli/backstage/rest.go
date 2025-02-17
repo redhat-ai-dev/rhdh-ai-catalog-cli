@@ -59,55 +59,34 @@ func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
 	return backstageRESTClient
 }
 
-func (k *BackstageRESTClientWrapper) processUpdate(resp *resty.Response, action, url, body string) (string, error) {
+func (k *BackstageRESTClientWrapper) processUpdate(resp *resty.Response, action, url, body string) (map[string]any, error) {
 	postResp := resp.String()
 	rc := resp.StatusCode()
 	if rc != 200 && rc != 201 {
-		return "", fmt.Errorf("%s %s with body %s status code %d resp: %s\n", url, action, body, rc, postResp)
+		return nil, fmt.Errorf("%s %s with body %s status code %d resp: %s\n", url, action, body, rc, postResp)
 	} else {
 		klog.V(4).Infof("%s %s with body %s status code %d resp: %s\n", url, action, body, rc, postResp)
 	}
 	return k.processBody(resp)
 }
 
-func (k *BackstageRESTClientWrapper) processBody(resp *resty.Response) (string, error) {
+func (k *BackstageRESTClientWrapper) processBody(resp *resty.Response) (map[string]any, error) {
 	retJSON := make(map[string]any)
 	err := json.Unmarshal(resp.Body(), &retJSON)
 	if err != nil {
-		return "", fmt.Errorf("json unmarshall error for %s: %s\n", resp.Body(), err.Error())
+		return nil, fmt.Errorf("json unmarshall error for %s: %s\n", resp.Body(), err.Error())
 	}
-	var location interface{}
-	var id interface{}
-	var target interface{}
-	var ok bool
-	location, ok = retJSON["location"]
-	if ok {
-		locationMap, o1 := location.(map[string]interface{})
-		if o1 {
-			id = locationMap["id"]
-			target = locationMap["target"]
-		}
-		return fmt.Sprintf("Backstage location %s from %s created", id, target), nil
-	}
-	id, ok = retJSON["id"]
-	if ok {
-		target, ok = retJSON["target"]
-		if ok {
-			return fmt.Sprintf("Backstage location %s from %s created", id, target), nil
-		}
-		return fmt.Sprintf("Backstage location %s created", id), nil
-	}
-	return fmt.Sprintf("%#v", retJSON), nil
+	return retJSON, err
 }
 
-func (k *BackstageRESTClientWrapper) postToBackstage(url string, body interface{}) (string, error) {
+func (k *BackstageRESTClientWrapper) postToBackstage(url string, body interface{}) (map[string]any, error) {
 	resp, err := backstageRESTClient.RESTClient.R().SetAuthToken(k.Token).SetBody(body).SetHeader("Accept", "application/json").Post(url)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	rc := resp.StatusCode()
 	if rc != 200 && rc != 201 {
-		return "", fmt.Errorf("post for %s rc %d body %s\n", url, rc, resp.String())
+		return nil, fmt.Errorf("post for %s rc %d body %s\n", url, rc, resp.String())
 	} else {
 		klog.V(4).Infof("post for %s returned ok\n", url)
 

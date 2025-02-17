@@ -3,9 +3,9 @@ package cli
 import (
 	"context"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/gin-gonic-http/client"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/server/gin-gonic-http/client"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
@@ -245,7 +245,12 @@ func NewCmd() *cobra.Command {
 			case "http":
 				fallthrough
 			case "https":
-				util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(args[0]))
+				bkstgREST := backstage.SetupBackstageRESTClient(cfg)
+				retJSON, err := bkstgREST.ImportLocation(args[0])
+				if err != nil {
+					util.ProcessOutput("", err)
+				}
+				util.ProcessOutput(bkstgREST.PrintImportLocation(retJSON))
 				return
 			default:
 				klog.Errorf("ERROR: import-model only supports http and https prototype scheme URLs")

@@ -3,31 +3,37 @@ package kubeflowmodelregistry
 import (
 	"context"
 	"fmt"
+	serverv1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
+	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
+	"regexp"
 	"strings"
 )
 
 const (
 	kubeflowExample = `
-# Both owner and lifecycle are required parameters.  Examine Backstage Catalog documentation for details.
+# Both Owner and Lifecycle are required parameters.  Examine Backstage Catalog documentation for details.
 # This will query all the RegisteredModel, ModelVersion, ModelArtifact, and InferenceService instances in the Kubeflow Model Registry and build Catalog Component, Resource, and
 # API Entities from the data.
-$ %s new-model kubeflow <owner> <lifecycle> <args...>
+$ %s new-model kubeflow <Owner> <Lifecycle> <args...>
 
 # This will set the URL, Token, and Skip TLS when accessing Kubeflow
-$ %s new-model kubeflow <owner> <lifecycle> --model-metadata-url=https://my-kubeflow.com --model-metadata-token=my-token --model-metadata-skip-tls=true
+$ %s new-model kubeflow <Owner> <Lifecycle> --model-metadata-url=https://my-kubeflow.com --model-metadata-token=my-token --model-metadata-skip-tls=true
 
 # This form will pull in only the RegisteredModels with the specified IDs '1' and '2' and the ModelVersion, ModelArtifact, and InferenceService
 # artifacts that are linked to those RegisteredModels in order to build Catalog Component, Resource, and API Entities.
-$ %s new-model kubeflow <owner> <lifecycle> 1 2 
+$ %s new-model kubeflow <Owner> <Lifecycle> 1 2 
 `
+
+	// pulled from makeValidator.ts in the catalog-model package in core backstage
+	tagRegexp = "^[a-z0-9:+#]+(\\-[a-z0-9:+#]+)*$"
 )
 
 func NewCmd(cfg *config.Config) *cobra.Command {
@@ -77,7 +83,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 						klog.Flush()
 						return err
 					}
-					err = callBackstagePrinters(owner, lifecycle, &rm, mvs, mas, isl, kfmr, cmd)
+					err = CallBackstagePrinters(owner, lifecycle, &rm, mvs, mas, isl, nil, kfmr, cmd.OutOrStdout())
 					if err != nil {
 						klog.Errorf("print model catalog: %s", err.Error())
 						klog.Flush()
@@ -101,7 +107,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 						klog.Flush()
 						return err
 					}
-					err = callBackstagePrinters(owner, lifecycle, rm, mvs, mas, isl, kfmr, cmd)
+					err = CallBackstagePrinters(owner, lifecycle, rm, mvs, mas, isl, nil, kfmr, cmd.OutOrStdout())
 				}
 			}
 			return nil
@@ -137,89 +143,93 @@ func callKubeflowREST(id string, kfmr *KubeFlowRESTClientWrapper) (mvs []openapi
 	return
 }
 
-func callBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel, mvs []openapi.ModelVersion, mas map[string][]openapi.ModelArtifact, isl []openapi.InferenceService, kfmr *KubeFlowRESTClientWrapper, cmd *cobra.Command) error {
-	compPop := componentPopulator{}
-	compPop.owner = owner
-	compPop.lifecycle = lifecycle
-	compPop.kfmr = kfmr
-	compPop.registeredModel = rm
-	compPop.modelVersions = mvs
-	compPop.modelArtifacts = mas
-	compPop.inferenceServices = isl
-	err := backstage.PrintComponent(&compPop, cmd)
+func CallBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel, mvs []openapi.ModelVersion, mas map[string][]openapi.ModelArtifact, isl []openapi.InferenceService, is *serverv1beta1.InferenceService, kfmr *KubeFlowRESTClientWrapper, writer io.Writer) error {
+	compPop := ComponentPopulator{}
+	compPop.Owner = owner
+	compPop.Lifecycle = lifecycle
+	compPop.Kfmr = kfmr
+	compPop.RegisteredModel = rm
+	compPop.ModelVersions = mvs
+	compPop.ModelArtifacts = mas
+	compPop.InferenceServices = isl
+	compPop.Kis = is
+	err := backstage.PrintComponent(&compPop, writer)
 	if err != nil {
 		return err
 	}
 
-	resPop := resourcePopulator{}
-	resPop.owner = owner
-	resPop.lifecycle = lifecycle
-	resPop.kfmr = kfmr
-	resPop.registeredModel = rm
+	resPop := ResourcePopulator{}
+	resPop.Owner = owner
+	resPop.Lifecycle = lifecycle
+	resPop.Kfmr = kfmr
+	resPop.RegisteredModel = rm
+	resPop.Kis = is
 	for _, mv := range mvs {
-		resPop.modelVersion = &mv
+		resPop.ModelVersion = &mv
 		m, _ := mas[*mv.Id]
-		resPop.modelArtifacts = m
-		err = backstage.PrintResource(&resPop, cmd)
+		resPop.ModelArtifacts = m
+		err = backstage.PrintResource(&resPop, writer)
 		if err != nil {
 			return err
 		}
 	}
 
-	apiPop := apiPopulator{}
-	apiPop.owner = owner
-	apiPop.lifecycle = lifecycle
-	apiPop.kfmr = kfmr
-	apiPop.registeredModel = rm
-	apiPop.inferenceServices = isl
-	return backstage.PrintAPI(&apiPop, cmd)
+	apiPop := ApiPopulator{}
+	apiPop.Owner = owner
+	apiPop.Lifecycle = lifecycle
+	apiPop.Kfmr = kfmr
+	apiPop.RegisteredModel = rm
+	apiPop.InferenceServices = isl
+	apiPop.Kis = is
+	return backstage.PrintAPI(&apiPop, writer)
 }
 
-type commonPopulator struct {
-	owner             string
-	lifecycle         string
-	registeredModel   *openapi.RegisteredModel
-	inferenceServices []openapi.InferenceService
-	kfmr              *KubeFlowRESTClientWrapper
+type CommonPopulator struct {
+	Owner             string
+	Lifecycle         string
+	RegisteredModel   *openapi.RegisteredModel
+	InferenceServices []openapi.InferenceService
+	Kfmr              *KubeFlowRESTClientWrapper
+	Kis               *serverv1beta1.InferenceService
 }
 
-func (pop *commonPopulator) GetOwner() string {
-	if pop.registeredModel.Owner != nil {
-		return *pop.registeredModel.Owner
+func (pop *CommonPopulator) GetOwner() string {
+	if pop.RegisteredModel.Owner != nil {
+		return *pop.RegisteredModel.Owner
 	}
-	return pop.owner
+	return pop.Owner
 }
 
-func (pop *commonPopulator) GetLifecycle() string {
-	return pop.lifecycle
+func (pop *CommonPopulator) GetLifecycle() string {
+	return pop.Lifecycle
 }
 
-func (pop *commonPopulator) GetDescription() string {
-	if pop.registeredModel.Description != nil {
-		return *pop.registeredModel.Description
+func (pop *CommonPopulator) GetDescription() string {
+	if pop.RegisteredModel.Description != nil {
+		return *pop.RegisteredModel.Description
 	}
 	return ""
 }
 
 // TODO won't have API until KubeFlow Model Registry gets us inferenceservice endpoints
-func (pop *commonPopulator) GetProvidedAPIs() []string {
+func (pop *CommonPopulator) GetProvidedAPIs() []string {
 	return []string{}
 }
 
-type componentPopulator struct {
-	commonPopulator
-	modelVersions  []openapi.ModelVersion
-	modelArtifacts map[string][]openapi.ModelArtifact
+type ComponentPopulator struct {
+	CommonPopulator
+	ModelVersions  []openapi.ModelVersion
+	ModelArtifacts map[string][]openapi.ModelArtifact
 }
 
-func (pop *componentPopulator) GetName() string {
-	return pop.registeredModel.Name
+func (pop *ComponentPopulator) GetName() string {
+	return pop.RegisteredModel.Name
 }
 
-func (pop *componentPopulator) GetLinks() []backstage.EntityLink {
+func (pop *ComponentPopulator) GetLinks() []backstage.EntityLink {
 	links := pop.getLinksFromInferenceServices()
 	// GGM maybe multi resource / multi model indication
-	for _, maa := range pop.modelArtifacts {
+	for _, maa := range pop.ModelArtifacts {
 		for _, ma := range maa {
 			if ma.Uri != nil {
 				links = append(links, backstage.EntityLink{
@@ -235,12 +245,12 @@ func (pop *componentPopulator) GetLinks() []backstage.EntityLink {
 	return links
 }
 
-func (pop *commonPopulator) getLinksFromInferenceServices() []backstage.EntityLink {
+func (pop *CommonPopulator) getLinksFromInferenceServices() []backstage.EntityLink {
 	links := []backstage.EntityLink{}
-	for _, is := range pop.inferenceServices {
+	for _, is := range pop.InferenceServices {
 		var rmid *string
 		var ok bool
-		rmid, ok = pop.registeredModel.GetIdOk()
+		rmid, ok = pop.RegisteredModel.GetIdOk()
 		if !ok {
 			continue
 		}
@@ -255,39 +265,61 @@ func (pop *commonPopulator) getLinksFromInferenceServices() []backstage.EntityLi
 		if *iss != openapi.INFERENCESERVICESTATE_DEPLOYED {
 			continue
 		}
-		se, err := pop.kfmr.GetServingEnvironment(is.ServingEnvironmentId)
+		se, err := pop.Kfmr.GetServingEnvironment(is.ServingEnvironmentId)
 		if err != nil {
-			klog.Errorf("componentPopulator GetLinks: %s", err.Error())
+			klog.Errorf("ComponentPopulator GetLinks: %s", err.Error())
 			continue
 		}
-		kisns := se.GetName()
-		kisnm := is.GetRuntime()
-		kis, err := pop.kfmr.Config.ServingClient.InferenceServices(kisns).Get(context.Background(), kisnm, metav1.GetOptions{})
-		if err != nil {
-			klog.Errorf("componentPopulator GetLinks: %s", err.Error())
-			continue
+		if pop.Kis == nil {
+			kisns := se.GetName()
+			kisnm := is.GetRuntime()
+			kis, err := pop.Kfmr.Config.ServingClient.InferenceServices(kisns).Get(context.Background(), kisnm, metav1.GetOptions{})
+			if err != nil {
+				klog.Errorf("ComponentPopulator GetLinks: %s", err.Error())
+				continue
+			}
+			pop.Kis = kis
 		}
-		kpop := kserve.CommonPopulator{InferSvc: kis}
+		kpop := kserve.CommonPopulator{InferSvc: pop.Kis}
 		links = append(links, kpop.GetLinks()...)
 	}
 	return links
 }
 
-func (pop *componentPopulator) GetTags() []string {
+func (pop *ComponentPopulator) GetTags() []string {
 	tags := []string{}
-	for key, value := range pop.registeredModel.GetCustomProperties() {
-		tags = append(tags, fmt.Sprintf("%s:%v", key, value.GetActualInstance()))
+	regex, _ := regexp.Compile(tagRegexp)
+	for key, value := range pop.RegisteredModel.GetCustomProperties() {
+		if !regex.MatchString(key) {
+			klog.Infof("skipping custom prop %s for tags", key)
+			continue
+		}
+		tag := key
+		if value.MetadataStringValue != nil {
+			strVal := value.MetadataStringValue.StringValue
+			if !regex.MatchString(fmt.Sprintf("%v", strVal)) {
+				klog.Infof("skipping custom prop value %v for tags", value.GetActualInstance())
+				continue
+			}
+			tag = fmt.Sprintf("%s-%s", tag, strVal)
+		}
+
+		if len(tag) > 63 {
+			klog.Infof("skipping tag %s because its length is greater than 63", tag)
+		}
+
+		tags = append(tags, tag)
 	}
 
 	return tags
 }
 
-func (pop *componentPopulator) GetDependsOn() []string {
+func (pop *ComponentPopulator) GetDependsOn() []string {
 	depends := []string{}
-	for _, mv := range pop.modelVersions {
+	for _, mv := range pop.ModelVersions {
 		depends = append(depends, "resource:"+mv.Name)
 	}
-	for _, mas := range pop.modelArtifacts {
+	for _, mas := range pop.ModelArtifacts {
 		for _, ma := range mas {
 			depends = append(depends, "api:"+*ma.Name)
 		}
@@ -295,32 +327,32 @@ func (pop *componentPopulator) GetDependsOn() []string {
 	return depends
 }
 
-func (pop *componentPopulator) GetTechdocRef() string {
+func (pop *ComponentPopulator) GetTechdocRef() string {
 	return "./"
 }
 
-func (pop *componentPopulator) GetDisplayName() string {
+func (pop *ComponentPopulator) GetDisplayName() string {
 	return pop.GetName()
 }
 
-type resourcePopulator struct {
-	commonPopulator
-	modelVersion   *openapi.ModelVersion
-	modelArtifacts []openapi.ModelArtifact
+type ResourcePopulator struct {
+	CommonPopulator
+	ModelVersion   *openapi.ModelVersion
+	ModelArtifacts []openapi.ModelArtifact
 }
 
-func (pop *resourcePopulator) GetName() string {
-	return pop.modelVersion.Name
+func (pop *ResourcePopulator) GetName() string {
+	return pop.ModelVersion.Name
 }
 
-func (pop *resourcePopulator) GetTechdocRef() string {
+func (pop *ResourcePopulator) GetTechdocRef() string {
 	return "resource/"
 }
 
-func (pop *resourcePopulator) GetLinks() []backstage.EntityLink {
+func (pop *ResourcePopulator) GetLinks() []backstage.EntityLink {
 	links := []backstage.EntityLink{}
 	// GGM maybe multi resource / multi model indication
-	for _, ma := range pop.modelArtifacts {
+	for _, ma := range pop.ModelArtifacts {
 		if ma.Uri != nil {
 			links = append(links, backstage.EntityLink{
 				URL:   *ma.Uri,
@@ -333,59 +365,95 @@ func (pop *resourcePopulator) GetLinks() []backstage.EntityLink {
 	return links
 }
 
-func (pop *resourcePopulator) GetTags() []string {
+func (pop *ResourcePopulator) GetTags() []string {
 	tags := []string{}
-	for key := range pop.modelVersion.GetCustomProperties() {
-		tags = append(tags, key)
+	regex, _ := regexp.Compile(tagRegexp)
+	for key, value := range pop.ModelVersion.GetCustomProperties() {
+		if !regex.MatchString(key) {
+			klog.Infof("skipping custom prop %s for tags", key)
+			continue
+		}
+		tag := key
+		if value.MetadataStringValue != nil {
+			strVal := value.MetadataStringValue.StringValue
+			if !regex.MatchString(fmt.Sprintf("%v", strVal)) {
+				klog.Infof("skipping custom prop value %v for tags", value.GetActualInstance())
+				continue
+			}
+			tag = fmt.Sprintf("%s-%s", tag, strVal)
+		}
+		if len(tag) > 63 {
+			klog.Infof("skipping tag %s because its length is greater than 63", tag)
+		}
+
+		tags = append(tags, tag)
 	}
 
-	for _, ma := range pop.modelArtifacts {
-		for k := range ma.GetCustomProperties() {
-			tags = append(tags, k)
+	for _, ma := range pop.ModelArtifacts {
+		for k, v := range ma.GetCustomProperties() {
+			if !regex.MatchString(k) {
+				klog.Infof("skipping custom prop %s for tags", k)
+				continue
+			}
+			tag := k
+			if v.MetadataStringValue != nil {
+				strVal := v.MetadataStringValue.StringValue
+				if !regex.MatchString(fmt.Sprintf("%v", strVal)) {
+					klog.Infof("skipping custom prop value %v for tags", v.GetActualInstance())
+					continue
+				}
+				tag = fmt.Sprintf("%s-%s", tag, strVal)
+			}
+
+			if len(tag) > 63 {
+				klog.Infof("skipping tag %s because its length is greater than 63", tag)
+			}
+
+			tags = append(tags, tag)
 		}
 	}
 	return tags
 }
 
-func (pop *resourcePopulator) GetDependencyOf() []string {
-	return []string{fmt.Sprintf("component:%s", pop.registeredModel.Name)}
+func (pop *ResourcePopulator) GetDependencyOf() []string {
+	return []string{fmt.Sprintf("component:%s", pop.RegisteredModel.Name)}
 }
 
-func (pop *resourcePopulator) GetDisplayName() string {
+func (pop *ResourcePopulator) GetDisplayName() string {
 	return pop.GetName()
 }
 
 // TODO Until we get the inferenceservice endpoint URL associated with the model registry related API won't have much for Backstage API here
-type apiPopulator struct {
-	commonPopulator
+type ApiPopulator struct {
+	CommonPopulator
 }
 
-func (pop *apiPopulator) GetName() string {
-	return pop.registeredModel.Name
+func (pop *ApiPopulator) GetName() string {
+	return pop.RegisteredModel.Name
 }
 
-func (pop *apiPopulator) GetDependencyOf() []string {
-	return []string{fmt.Sprintf("component:%s", pop.registeredModel.Name)}
+func (pop *ApiPopulator) GetDependencyOf() []string {
+	return []string{fmt.Sprintf("component:%s", pop.RegisteredModel.Name)}
 }
 
-func (pop *apiPopulator) GetDefinition() string {
+func (pop *ApiPopulator) GetDefinition() string {
 	// definition must be set to something to pass backstage validation
 	return "no-definition-yet"
 }
 
-func (pop *apiPopulator) GetTechdocRef() string {
-	// TODO in theory the kfmr modelcard support when it arrives will influcen this
+func (pop *ApiPopulator) GetTechdocRef() string {
+	// TODO in theory the Kfmr modelcard support when it arrives will influcen this
 	return "api/"
 }
 
-func (pop *apiPopulator) GetTags() []string {
+func (pop *ApiPopulator) GetTags() []string {
 	return []string{}
 }
 
-func (pop *apiPopulator) GetLinks() []backstage.EntityLink {
+func (pop *ApiPopulator) GetLinks() []backstage.EntityLink {
 	return pop.getLinksFromInferenceServices()
 }
 
-func (pop *apiPopulator) GetDisplayName() string {
+func (pop *ApiPopulator) GetDisplayName() string {
 	return pop.GetName()
 }

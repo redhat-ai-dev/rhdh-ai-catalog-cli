@@ -40,7 +40,9 @@ func TestImportLocation(t *testing.T) {
 	defer ts.Close()
 
 	arg := "https://my-repo/my.yaml"
-	str, err := SetupBackstageTestRESTClient(ts).ImportLocation(arg)
+	retJSON, err := SetupBackstageTestRESTClient(ts).ImportLocation(arg)
+	stub.AssertError(t, err)
+	str, err := SetupBackstageTestRESTClient(ts).PrintImportLocation(retJSON)
 	stub.AssertError(t, err)
 	stub.AssertContains(t, str, []string{arg})
 }

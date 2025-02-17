@@ -1,8 +1,9 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/spf13/cobra"
+	"io"
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/klog/v2"
 	"os"
@@ -13,15 +14,15 @@ import (
 
 const ApplicationName = "bac"
 
-func PrintYaml(obj interface{}, addDivider bool, cmd *cobra.Command) error {
-	writer := printers.GetNewTabWriter(cmd.OutOrStdout())
+func PrintYaml(obj interface{}, addDivider bool, w io.Writer) error {
+	writer := printers.GetNewTabWriter(w)
 	output, err := yaml.Marshal(obj)
 	if err != nil {
 		return err
 	}
 	_, err = writer.Write(output)
 	if addDivider {
-		fmt.Fprintln(cmd.OutOrStdout(), "---")
+		fmt.Fprintln(w, "---")
 	}
 	return err
 }
@@ -30,6 +31,21 @@ var (
 	shutdownSignals      = []os.Signal{os.Interrupt, syscall.SIGTERM}
 	onlyOneSignalHandler = make(chan struct{})
 )
+
+func BuildYaml(obj interface{}, buf []byte, addDivider bool) ([]byte, error) {
+	b := bytes.NewBuffer(buf)
+	writer := printers.GetNewTabWriter(b)
+	output, err := yaml.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+	_, err = writer.Write(output)
+	if addDivider {
+		fmt.Fprintln(b, "---")
+	}
+	buf = append(buf, b.Bytes()...)
+	return buf, nil
+}
 
 // SetupSignalHandler registered for SIGTERM and SIGINT. A stop channel is returned
 // which is closed on one of these signals. If a second signal is caught, the program

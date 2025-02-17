@@ -12,10 +12,10 @@ import (
 
 type ImportLocationServer struct {
 	router  *gin.Engine
-	content map[string][]byte
+	content map[string]*ImportLocation
 }
 
-func NewImportLocationServer(content map[string][]byte) *ImportLocationServer {
+func NewImportLocationServer(content map[string]*ImportLocation) *ImportLocationServer {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	i := &ImportLocationServer{
@@ -28,8 +28,8 @@ func NewImportLocationServer(content map[string][]byte) *ImportLocationServer {
 	r.Use(addRequestId())
 	d := &DicoveryResponse{Uris: []string{}}
 	for key, data := range content {
-		klog.Infof("NewImportLocationServer looking at key %s and content len %d", key, len(data))
-		il := &ImportLocation{content: data}
+		klog.Infof("NewImportLocationServer looking at key %s and content len %d", key, len(data.content))
+		il := &ImportLocation{content: data.content}
 		segs := strings.Split(key, "_")
 		if len(segs) < 2 {
 			continue
@@ -39,8 +39,8 @@ func NewImportLocationServer(content map[string][]byte) *ImportLocationServer {
 		r.GET(uri, il.handleCatalogInfoGet)
 		d.Uris = append(d.Uris, uri)
 	}
-	r.GET("/list", d.handleCatalogDiscoveryGet)
-	//TODO can also provide a POST URI for adding ImportLocations
+	r.GET("/list", i.handleCatalogDiscoveryGet)
+	r.POST("/upsert", i.handleCatalogUpsertPost)
 	return i
 }
 
@@ -85,7 +85,11 @@ type DicoveryResponse struct {
 	Uris []string `json:"uris"`
 }
 
-func (d *DicoveryResponse) handleCatalogDiscoveryGet(c *gin.Context) {
+func (i *ImportLocationServer) handleCatalogDiscoveryGet(c *gin.Context) {
+	d := &DicoveryResponse{}
+	for uri := range i.content {
+		d.Uris = append(d.Uris, uri)
+	}
 	content, err := json.Marshal(d)
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -93,4 +97,43 @@ func (d *DicoveryResponse) handleCatalogDiscoveryGet(c *gin.Context) {
 		return
 	}
 	c.Data(http.StatusOK, "Content-Type: application/json", content)
+}
+
+type PostBody struct {
+	Body []byte `json:"body"`
+}
+
+func (u *ImportLocationServer) handleCatalogUpsertPost(c *gin.Context) {
+	key := c.Query("key")
+	if len(key) == 0 {
+		c.Status(http.StatusBadRequest)
+		c.Error(fmt.Errorf("need a 'key' parameter"))
+		return
+	}
+	var postBody PostBody
+	err := c.BindJSON(&postBody)
+	klog.Infof("GGM body data len %d", len(postBody.Body))
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		msg := fmt.Sprintf("error reading POST body: %s", err.Error())
+		klog.Errorf(msg)
+		c.Error(fmt.Errorf(msg))
+		return
+	}
+	segs := strings.Split(key, "_")
+	if len(segs) < 2 {
+		c.Status(http.StatusBadRequest)
+		c.Error(fmt.Errorf("bad key format: %s", key))
+		return
+	}
+	uri := fmt.Sprintf("%s/%s/catalog-info.yaml", segs[0], segs[1])
+	klog.Infoln("Upserting URI " + uri)
+	il, exists := u.content[uri]
+	if !exists {
+		il = &ImportLocation{}
+		u.router.GET(uri, il.handleCatalogInfoGet)
+	}
+	il.content = postBody.Body
+	u.content[uri] = il
+	c.Status(http.StatusCreated)
 }

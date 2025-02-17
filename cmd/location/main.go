@@ -2,7 +2,7 @@ package main
 
 import (
 	goflag "flag"
-	gin_gonic_http_srv "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/gin-gonic-http/server"
+	gin_gonic_http_srv "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/server/gin-gonic-http/server"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"io/fs"
 	"k8s.io/klog/v2"
@@ -15,7 +15,7 @@ func main() {
 	flagset := goflag.NewFlagSet("location", goflag.ContinueOnError)
 	klog.InitFlags(flagset)
 
-	content := map[string][]byte{}
+	content := map[string]*gin_gonic_http_srv.ImportLocation{}
 	err := filepath.Walk("/data", func(path string, info fs.FileInfo, err error) error {
 		if strings.Contains(info.Name(), "_") {
 			c := []byte{}
@@ -35,7 +35,8 @@ func main() {
 				return err
 			}
 			klog.Infof("adding file %s with content len %d to list", info.Name(), len(c))
-			content[info.Name()] = c
+			ic := &gin_gonic_http_srv.ImportLocation{}
+			content[info.Name()] = ic
 		}
 		return nil
 	})

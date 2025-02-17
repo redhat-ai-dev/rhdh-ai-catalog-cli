@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	TestJSONStringRegisteredModelOneLine    = `{"items":[{"createTimeSinceEpoch":"1731103949567","customProperties":{"foo":{"metadataType":"MetadataStringValue","string_value":"bar"}},"description":"dummy model 1","id":"1","lastUpdateTimeSinceEpoch":"1731103975700","name":"model-1","owner":"kube:admin","state":"LIVE"}],"nextPageToken":"","pageSize":0,"size":1}`
-	TestJSONStringRegisteredModelOneLineGet = `{"createTimeSinceEpoch":"1731103949567","customProperties":{"foo":{"metadataType":"MetadataStringValue","string_value":"bar"}},"description":"dummy model 1","id":"1","lastUpdateTimeSinceEpoch":"1731103975700","name":"model-1","owner":"kube:admin","state":"LIVE"}`
+	TestJSONStringRegisteredModelOneLine    = `{"items":[{"createTimeSinceEpoch":"1731103949567","customProperties":{"foo":{"metadataType":"MetadataStringValue","string_value":"bar"}},"description":"dummy model 1","id":"1","lastUpdateTimeSinceEpoch":"1731103975700","name":"model-1","Owner":"kube:admin","state":"LIVE"}],"nextPageToken":"","pageSize":0,"size":1}`
+	TestJSONStringRegisteredModelOneLineGet = `{"createTimeSinceEpoch":"1731103949567","customProperties":{"foo":{"metadataType":"MetadataStringValue","string_value":"bar"}},"description":"dummy model 1","id":"1","lastUpdateTimeSinceEpoch":"1731103975700","name":"model-1","Owner":"kube:admin","state":"LIVE"}`
 	TestJSONStringModelVersionOneLine       = `{"items":[{"author":"kube:admin","createTimeSinceEpoch":"1731103949724","customProperties":{},"description":"version 1","id":"2","lastUpdateTimeSinceEpoch":"1731103949724","name":"v1","registeredModelId":"1","state":"LIVE"}],"nextPageToken":"","pageSize":0,"size":1}`
 	TestJSONStringModelArtifactOneLine      = `{"items":[{"artifactType":"model-artifact","createTimeSinceEpoch":"1731103949909","customProperties":{},"description":"version 1","id":"1","lastUpdateTimeSinceEpoch":"1731103949909","modelFormatName":"tensorflow","modelFormatVersion":"v1","name":"model-1-v1-artifact","state":"LIVE","uri":"https://foo.com"}],"nextPageToken":"","pageSize":0,"size":1}`
 )

@@ -3,6 +3,7 @@ package backstage
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"strings"
 )
 
@@ -34,7 +35,7 @@ func (b *BackstageRESTClientWrapper) GetLocation(args ...string) (string, error)
 	return buffer.String(), nil
 }
 
-func (b *BackstageRESTClientWrapper) ImportLocation(url string) (string, error) {
+func (b *BackstageRESTClientWrapper) ImportLocation(url string) (map[string]any, error) {
 	if strings.Contains(url, "github") {
 		return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "url"})
 	}
@@ -43,4 +44,57 @@ func (b *BackstageRESTClientWrapper) ImportLocation(url string) (string, error) 
 
 func (b *BackstageRESTClientWrapper) DeleteLocation(id string) (string, error) {
 	return b.deleteFromBackstage(b.RootURL + LOCATION_URI + "/" + id)
+}
+
+func (b *BackstageRESTClientWrapper) PrintImportLocation(retJSON map[string]any) (string, error) {
+	var location interface{}
+	var id interface{}
+	var target interface{}
+	var ok bool
+	location, ok = retJSON["location"]
+	if ok {
+		locationMap, o1 := location.(map[string]interface{})
+		if o1 {
+			id = locationMap["id"]
+			target = locationMap["target"]
+		}
+		return fmt.Sprintf("Backstage location %s from %s created", id, target), nil
+	}
+	id, ok = retJSON["id"]
+	if ok {
+		target, ok = retJSON["target"]
+		if ok {
+			return fmt.Sprintf("Backstage location %s from %s created", id, target), nil
+		}
+		return fmt.Sprintf("Backstage location %s created", id), nil
+	}
+	return fmt.Sprintf("%#v", retJSON), nil
+
+}
+
+func (b *BackstageRESTClientWrapper) ParseImportLocationMap(retJSON map[string]any) (id string, target string, ok bool) {
+	var location interface{}
+	location, ok = retJSON["location"]
+	if ok {
+		var locationMap map[string]interface{}
+		locationMap, ok = location.(map[string]interface{})
+		if ok {
+			id = fmt.Sprintf("%s", locationMap["id"])
+			target = fmt.Sprintf("%s", locationMap["target"])
+			return id, target, ok
+		}
+	}
+	var idi interface{}
+	idi, ok = retJSON["id"]
+	if ok {
+		var targeti interface{}
+		targeti, ok = retJSON["target"]
+		if ok {
+			id = fmt.Sprintf("%s", idi)
+			target = fmt.Sprintf("%s", targeti)
+			return id, target, ok
+		}
+	}
+
+	return id, target, ok
 }

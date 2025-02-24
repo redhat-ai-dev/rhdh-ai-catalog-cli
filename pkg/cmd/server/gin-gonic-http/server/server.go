@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"k8s.io/klog/v2"
 	"net/http"
 	"strings"
@@ -34,7 +35,7 @@ func NewImportLocationServer(content map[string]*ImportLocation) *ImportLocation
 		if len(segs) < 2 {
 			continue
 		}
-		uri := fmt.Sprintf("%s/%s/catalog-info.yaml", segs[0], segs[1])
+		_, uri := util.BuildImportKeyAndURI(segs[0], segs[1])
 		klog.Infoln("Adding URI " + uri)
 		r.GET(uri, il.handleCatalogInfoGet)
 		d.Uris = append(d.Uris, uri)
@@ -112,7 +113,6 @@ func (u *ImportLocationServer) handleCatalogUpsertPost(c *gin.Context) {
 	}
 	var postBody PostBody
 	err := c.BindJSON(&postBody)
-	klog.Infof("GGM body data len %d", len(postBody.Body))
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 		msg := fmt.Sprintf("error reading POST body: %s", err.Error())
@@ -126,8 +126,8 @@ func (u *ImportLocationServer) handleCatalogUpsertPost(c *gin.Context) {
 		c.Error(fmt.Errorf("bad key format: %s", key))
 		return
 	}
-	uri := fmt.Sprintf("%s/%s/catalog-info.yaml", segs[0], segs[1])
-	klog.Infoln("Upserting URI " + uri)
+	_, uri := util.BuildImportKeyAndURI(segs[0], segs[1])
+	klog.Infof("Upserting URI %s with data of len %d", uri, len(postBody.Body))
 	il, exists := u.content[uri]
 	if !exists {
 		il = &ImportLocation{}

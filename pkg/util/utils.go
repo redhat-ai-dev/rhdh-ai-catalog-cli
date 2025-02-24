@@ -1,7 +1,6 @@
 package util
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"k8s.io/cli-runtime/pkg/printers"
@@ -32,21 +31,6 @@ var (
 	onlyOneSignalHandler = make(chan struct{})
 )
 
-func BuildYaml(obj interface{}, buf []byte, addDivider bool) ([]byte, error) {
-	b := bytes.NewBuffer(buf)
-	writer := printers.GetNewTabWriter(b)
-	output, err := yaml.Marshal(obj)
-	if err != nil {
-		return nil, err
-	}
-	_, err = writer.Write(output)
-	if addDivider {
-		fmt.Fprintln(b, "---")
-	}
-	buf = append(buf, b.Bytes()...)
-	return buf, nil
-}
-
 // SetupSignalHandler registered for SIGTERM and SIGINT. A stop channel is returned
 // which is closed on one of these signals. If a second signal is caught, the program
 // is terminated with exit code 1.
@@ -73,4 +57,8 @@ func ProcessOutput(str string, err error) {
 		klog.Errorf("%s", err.Error())
 		klog.Flush()
 	}
+}
+
+func BuildImportKeyAndURI(seg1, seg2 string) (string, string) {
+	return fmt.Sprintf("%s_%s", seg1, seg2), fmt.Sprintf("/%s/%s/catalog-info.yaml", seg1, seg2)
 }

@@ -62,6 +62,9 @@ func (pop *CommonPopulator) GetLifecycle() string {
 }
 
 func (pop *CommonPopulator) GetName() string {
+	if pop.InferSvc == nil {
+		return ""
+	}
 	return fmt.Sprintf("%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)
 }
 func (pop *CommonPopulator) GetDescription() string {
@@ -70,6 +73,9 @@ func (pop *CommonPopulator) GetDescription() string {
 
 func (pop *CommonPopulator) GetLinks() []backstage.EntityLink {
 	links := []backstage.EntityLink{}
+	if pop.InferSvc == nil {
+		return links
+	}
 	if pop.InferSvc.Status.URL != nil {
 		links = append(links, backstage.EntityLink{
 			URL:   pop.InferSvc.Status.URL.String(),
@@ -116,6 +122,9 @@ func (pop *CommonPopulator) GetLinks() []backstage.EntityLink {
 
 func (pop *CommonPopulator) GetTags() []string {
 	tags := []string{}
+	if pop.InferSvc == nil {
+		return tags
+	}
 	predictor := pop.InferSvc.Spec.Predictor
 	// one and only one predictor spec can be set
 	switch {
@@ -166,6 +175,9 @@ func (pop *CommonPopulator) GetTags() []string {
 }
 
 func (pop *CommonPopulator) GetProvidedAPIs() []string {
+	if pop.InferSvc == nil {
+		return []string{}
+	}
 	return []string{fmt.Sprintf("%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
@@ -206,6 +218,9 @@ type ApiPopulator struct {
 }
 
 func (pop *ApiPopulator) GetDependencyOf() []string {
+	if pop.InferSvc == nil {
+		return []string{}
+	}
 	return []string{fmt.Sprintf("component:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 

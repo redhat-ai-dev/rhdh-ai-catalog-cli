@@ -12,8 +12,10 @@ import (
 	"github.com/spf13/cobra"
 	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"regexp"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 )
 
@@ -61,60 +63,72 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 
 			kfmr := SetupKubeflowRESTClient(cfg)
 
-			var err error
-			var isl []openapi.InferenceService
+			_, _, err := LoopOverKFMR(owner, lifecycle, ids, cmd.OutOrStdout(), kfmr, nil)
+			return err
 
-			isl, err = kfmr.ListInferenceServices()
-
-			if len(ids) == 0 {
-				var rms []openapi.RegisteredModel
-				rms, err = kfmr.ListRegisteredModels()
-				if err != nil {
-					klog.Errorf("list registered models error: %s", err.Error())
-					klog.Flush()
-					return err
-				}
-				for _, rm := range rms {
-					var mvs []openapi.ModelVersion
-					var mas map[string][]openapi.ModelArtifact
-					mvs, mas, err = callKubeflowREST(*rm.Id, kfmr)
-					if err != nil {
-						klog.Errorf("%s", err.Error())
-						klog.Flush()
-						return err
-					}
-					err = CallBackstagePrinters(owner, lifecycle, &rm, mvs, mas, isl, nil, kfmr, cmd.OutOrStdout())
-					if err != nil {
-						klog.Errorf("print model catalog: %s", err.Error())
-						klog.Flush()
-						return err
-					}
-				}
-			} else {
-				for _, id := range ids {
-					var rm *openapi.RegisteredModel
-					rm, err = kfmr.GetRegisteredModel(id)
-					if err != nil {
-						klog.Errorf("get registered model error for %s: %s", id, err.Error())
-						klog.Flush()
-						return err
-					}
-					var mvs []openapi.ModelVersion
-					var mas map[string][]openapi.ModelArtifact
-					mvs, mas, err = callKubeflowREST(*rm.Id, kfmr)
-					if err != nil {
-						klog.Errorf("get model version/artifact error for %s: %s", id, err.Error())
-						klog.Flush()
-						return err
-					}
-					err = CallBackstagePrinters(owner, lifecycle, rm, mvs, mas, isl, nil, kfmr, cmd.OutOrStdout())
-				}
-			}
-			return nil
 		},
 	}
 
 	return cmd
+}
+
+func LoopOverKFMR(owner, lifecycle string, ids []string, writer io.Writer, kfmr *KubeFlowRESTClientWrapper, client client.Client) ([]openapi.RegisteredModel, map[string][]openapi.ModelVersion, error) {
+	var err error
+	var isl []openapi.InferenceService
+	rmArray := []openapi.RegisteredModel{}
+	mvsMap := map[string][]openapi.ModelVersion{}
+
+	isl, err = kfmr.ListInferenceServices()
+
+	if len(ids) == 0 {
+		var rms []openapi.RegisteredModel
+		rms, err = kfmr.ListRegisteredModels()
+		if err != nil {
+			klog.Errorf("list registered models error: %s", err.Error())
+			klog.Flush()
+			return nil, nil, err
+		}
+		for _, rm := range rms {
+			var mvs []openapi.ModelVersion
+			var mas map[string][]openapi.ModelArtifact
+			mvs, mas, err = callKubeflowREST(*rm.Id, kfmr)
+			if err != nil {
+				klog.Errorf("%s", err.Error())
+				klog.Flush()
+				return nil, nil, err
+			}
+			err = CallBackstagePrinters(owner, lifecycle, &rm, mvs, mas, isl, nil, kfmr, client, writer)
+			if err != nil {
+				klog.Errorf("print model catalog: %s", err.Error())
+				klog.Flush()
+				return nil, nil, err
+			}
+			rmArray = append(rmArray, rm)
+			mvsMap[rm.Name] = mvs
+		}
+	} else {
+		for _, id := range ids {
+			var rm *openapi.RegisteredModel
+			rm, err = kfmr.GetRegisteredModel(id)
+			if err != nil {
+				klog.Errorf("get registered model error for %s: %s", id, err.Error())
+				klog.Flush()
+				return nil, nil, err
+			}
+			var mvs []openapi.ModelVersion
+			var mas map[string][]openapi.ModelArtifact
+			mvs, mas, err = callKubeflowREST(*rm.Id, kfmr)
+			if err != nil {
+				klog.Errorf("get model version/artifact error for %s: %s", id, err.Error())
+				klog.Flush()
+				return nil, nil, err
+			}
+			err = CallBackstagePrinters(owner, lifecycle, rm, mvs, mas, isl, nil, kfmr, client, writer)
+			rmArray = append(rmArray, *rm)
+			mvsMap[rm.Name] = mvs
+		}
+	}
+	return rmArray, mvsMap, nil
 }
 
 func callKubeflowREST(id string, kfmr *KubeFlowRESTClientWrapper) (mvs []openapi.ModelVersion, ma map[string][]openapi.ModelArtifact, err error) {
@@ -143,7 +157,7 @@ func callKubeflowREST(id string, kfmr *KubeFlowRESTClientWrapper) (mvs []openapi
 	return
 }
 
-func CallBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel, mvs []openapi.ModelVersion, mas map[string][]openapi.ModelArtifact, isl []openapi.InferenceService, is *serverv1beta1.InferenceService, kfmr *KubeFlowRESTClientWrapper, writer io.Writer) error {
+func CallBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel, mvs []openapi.ModelVersion, mas map[string][]openapi.ModelArtifact, isl []openapi.InferenceService, is *serverv1beta1.InferenceService, kfmr *KubeFlowRESTClientWrapper, client client.Client, writer io.Writer) error {
 	compPop := ComponentPopulator{}
 	compPop.Owner = owner
 	compPop.Lifecycle = lifecycle
@@ -153,6 +167,7 @@ func CallBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel,
 	compPop.ModelArtifacts = mas
 	compPop.InferenceServices = isl
 	compPop.Kis = is
+	compPop.CtrlClient = client
 	err := backstage.PrintComponent(&compPop, writer)
 	if err != nil {
 		return err
@@ -164,6 +179,7 @@ func CallBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel,
 	resPop.Kfmr = kfmr
 	resPop.RegisteredModel = rm
 	resPop.Kis = is
+	resPop.CtrlClient = client
 	for _, mv := range mvs {
 		resPop.ModelVersion = &mv
 		m, _ := mas[*mv.Id]
@@ -181,6 +197,7 @@ func CallBackstagePrinters(owner, lifecycle string, rm *openapi.RegisteredModel,
 	apiPop.RegisteredModel = rm
 	apiPop.InferenceServices = isl
 	apiPop.Kis = is
+	apiPop.CtrlClient = client
 	return backstage.PrintAPI(&apiPop, writer)
 }
 
@@ -191,6 +208,7 @@ type CommonPopulator struct {
 	InferenceServices []openapi.InferenceService
 	Kfmr              *KubeFlowRESTClientWrapper
 	Kis               *serverv1beta1.InferenceService
+	CtrlClient        client.Client
 }
 
 func (pop *CommonPopulator) GetOwner() string {
@@ -273,7 +291,15 @@ func (pop *CommonPopulator) getLinksFromInferenceServices() []backstage.EntityLi
 		if pop.Kis == nil {
 			kisns := se.GetName()
 			kisnm := is.GetRuntime()
-			kis, err := pop.Kfmr.Config.ServingClient.InferenceServices(kisns).Get(context.Background(), kisnm, metav1.GetOptions{})
+			var kis *serverv1beta1.InferenceService
+			if pop.Kfmr != nil && pop.Kfmr.Config != nil && pop.Kfmr.Config.ServingClient != nil {
+				kis, err = pop.Kfmr.Config.ServingClient.InferenceServices(kisns).Get(context.Background(), kisnm, metav1.GetOptions{})
+			}
+			if kis == nil && pop.CtrlClient != nil {
+				kis = &serverv1beta1.InferenceService{}
+				err = pop.CtrlClient.Get(context.Background(), types.NamespacedName{Namespace: kisns, Name: kisnm}, kis)
+			}
+
 			if err != nil {
 				klog.Errorf("ComponentPopulator GetLinks: %s", err.Error())
 				continue

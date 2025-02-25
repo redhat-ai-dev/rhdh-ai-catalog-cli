@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 )
 
 type listComponents struct {
@@ -15,7 +16,7 @@ type listComponents struct {
 func (b *BackstageRESTClientWrapper) ListComponents(args ...string) (string, error) {
 	qparms := updateQParams("component", COMPONENT_TYPE, args)
 
-	str, err := b.getWithKindParamFromBackstage(b.RootURL+QUERY_URI, qparms)
+	str, err := b.getWithKindParamFromBackstage(b.RootURL+rest.QUERY_URI, qparms)
 	if err != nil {
 		return str, err
 	}
@@ -55,7 +56,7 @@ func (b *BackstageRESTClientWrapper) GetComponent(args ...string) (string, error
 	buffer := &bytes.Buffer{}
 	for namespace, names := range keys {
 		for _, name := range names {
-			str, err := b.getFromBackstage(b.RootURL + fmt.Sprintf(COMPONENT_URI, namespace, name))
+			str, err := b.getFromBackstage(b.RootURL + fmt.Sprintf(rest.COMPONENT_URI, namespace, name))
 			if err != nil {
 				return buffer.String(), err
 			}

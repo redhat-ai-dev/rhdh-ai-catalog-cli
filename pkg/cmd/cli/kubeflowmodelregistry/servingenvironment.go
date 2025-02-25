@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kubeflow/model-registry/pkg/openapi"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 )
 
 func (k *KubeFlowRESTClientWrapper) GetServingEnvironment(id string) (*openapi.ServingEnvironment, error) {
-	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(GET_SERVING_ENV_URI, id))
+	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(rest.GET_SERVING_ENV_URI, id))
 	if err != nil {
 		return nil, err
 	}

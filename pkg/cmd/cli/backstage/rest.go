@@ -6,20 +6,12 @@ import (
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
 	"k8s.io/klog/v2"
+	"net/http/httptest"
 	nurl "net/url"
 	"os"
-)
-
-const (
-	BASE_URI      = "/api/catalog"
-	LOCATION_URI  = "/locations"
-	ENTITIES_URI  = "/entities"
-	COMPONENT_URI = "/entities/by-name/component/%s/%s"
-	RESOURCE_URI  = "/entities/by-name/resource/%s/%s"
-	API_URI       = "/entities/by-name/api/%s/%s"
-	QUERY_URI     = "/entities/by-query"
-	DEFAULT_NS    = "default"
 )
 
 type BackstageRESTClientWrapper struct {
@@ -40,6 +32,13 @@ func init() {
 	}
 }
 
+func SetupBackstageTestRESTClient(ts *httptest.Server) *BackstageRESTClientWrapper {
+	backstageTestRESTClient := &BackstageRESTClientWrapper{}
+	backstageTestRESTClient.RESTClient = stub.DC()
+	backstageTestRESTClient.RootURL = ts.URL
+	return backstageTestRESTClient
+}
+
 func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
 	if cfg == nil {
 		klog.Error("Command config is nil")
@@ -51,7 +50,7 @@ func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
 	}
 	backstageRESTClient.RESTClient.SetTLSClientConfig(tlsCfg)
 	backstageRESTClient.Token = cfg.BackstageToken
-	backstageRESTClient.RootURL = cfg.BackstageURL + BASE_URI
+	backstageRESTClient.RootURL = cfg.BackstageURL + rest.BASE_URI
 
 	backstageRESTClient.Tags = cfg.ParamsAsTags
 	backstageRESTClient.Subset = cfg.AnySubsetWorks

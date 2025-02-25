@@ -6,16 +6,16 @@ import (
 )
 
 func TestListLocations(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	str, err := SetupBackstageTestRESTClient(ts).ListLocations()
 	stub.AssertError(t, err)
-	stub.AssertEqual(t, TestJSONStringIndented, str)
+	stub.AssertEqual(t, stub.TestJSONStringIndented, str)
 }
 
 func TestGetLocations(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	key := "key1"
@@ -25,7 +25,7 @@ func TestGetLocations(t *testing.T) {
 }
 
 func TestGetLocationsError(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	nsName := "404:404"
@@ -36,7 +36,7 @@ func TestGetLocationsError(t *testing.T) {
 }
 
 func TestImportLocation(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	arg := "https://my-repo/my.yaml"
@@ -48,7 +48,7 @@ func TestImportLocation(t *testing.T) {
 }
 
 func TestImportLocationError(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	arg := ":"
@@ -59,7 +59,7 @@ func TestImportLocationError(t *testing.T) {
 }
 
 func TestDeleteLocation(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	arg := "my-location-id"
@@ -69,7 +69,7 @@ func TestDeleteLocation(t *testing.T) {
 }
 
 func TestDeleteLocationsError(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	nsName := "404:404"

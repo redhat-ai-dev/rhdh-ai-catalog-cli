@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewCmd(t *testing.T) {
-	ts := CreateGetServer(t)
+	ts := stub.CreateGetServer(t)
 	defer ts.Close()
 	for _, tc := range []struct {
 		args           []string
@@ -43,7 +43,7 @@ func TestNewCmd(t *testing.T) {
 		},
 	} {
 		cfg := &config.Config{}
-		SetupKubeflowTestRESTClient(ts, cfg)
+		stub.SetupKubeflowTestRESTClient(ts, cfg)
 		cmd := NewCmd(cfg)
 		subCmd, stdout, stderr, err := stub.ExecuteCommandC(cmd, tc.args...)
 		switch {

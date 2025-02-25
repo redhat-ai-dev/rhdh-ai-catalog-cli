@@ -17,6 +17,9 @@ func main() {
 
 	content := map[string]*gin_gonic_http_srv.ImportLocation{}
 	err := filepath.Walk("/data", func(path string, info fs.FileInfo, err error) error {
+		if info == nil {
+			return nil
+		}
 		if strings.Contains(info.Name(), "_") {
 			c := []byte{}
 			klog.Infoln("processing configmap file " + info.Name())

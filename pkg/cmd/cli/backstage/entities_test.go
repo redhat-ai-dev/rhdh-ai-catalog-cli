@@ -6,10 +6,10 @@ import (
 )
 
 func TestListEntities(t *testing.T) {
-	ts := CreateServer(t)
+	ts := stub.CreateServer(t)
 	defer ts.Close()
 
 	str, err := SetupBackstageTestRESTClient(ts).ListEntities()
 	stub.AssertError(t, err)
-	stub.AssertEqual(t, TestJSONStringIndented, str)
+	stub.AssertEqual(t, stub.TestJSONStringIndented, str)
 }

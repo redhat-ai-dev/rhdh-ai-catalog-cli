@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kubeflow/model-registry/pkg/openapi"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 )
 
 func (k *KubeFlowRESTClientWrapper) ListModelArtifacts(id string) ([]openapi.ModelArtifact, error) {
-	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(LIST_ARTFIACTS_OFF_VERSIONS_URI, id))
+	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(rest.LIST_ARTFIACTS_OFF_VERSIONS_URI, id))
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +22,7 @@ func (k *KubeFlowRESTClientWrapper) ListModelArtifacts(id string) ([]openapi.Mod
 }
 
 func (k *KubeFlowRESTClientWrapper) GetModelArtifact(id string) (*openapi.ModelArtifact, error) {
-	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(GET_MODEL_ARTIFACT_URI, id))
+	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(rest.GET_MODEL_ARTIFACT_URI, id))
 	if err != nil {
 		return nil, err
 	}

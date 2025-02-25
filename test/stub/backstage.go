@@ -1,10 +1,9 @@
-package backstage
+package stub
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -26,51 +25,44 @@ const (
 	TestDeleteJSONStringOneLinePlusPathParam = `{"TestDelete": "JSON response path %s"}`
 )
 
-func SetupBackstageTestRESTClient(ts *httptest.Server) *BackstageRESTClientWrapper {
-	backstageTestRESTClient := &BackstageRESTClientWrapper{}
-	backstageTestRESTClient.RESTClient = stub.DC()
-	backstageTestRESTClient.RootURL = ts.URL
-	return backstageTestRESTClient
-}
-
 func CreateServer(t *testing.T) *httptest.Server {
-	ts := stub.CreateTestServer(func(w http.ResponseWriter, r *http.Request) {
+	ts := CreateTestServer(func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("Method: %v", r.Method)
 		t.Logf("Path: %v", r.URL.Path)
 
 		switch r.Method {
-		case stub.MethodGet:
+		case MethodGet:
 			switch r.URL.Path {
 			case "/":
 				_, _ = w.Write([]byte("TestGet: text response"))
 				return
-			case ENTITIES_URI:
+			case rest.ENTITIES_URI:
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(TestJSONStringOneLine))
 				return
-			case LOCATION_URI:
+			case rest.LOCATION_URI:
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(TestJSONStringOneLine))
 				return
 			}
 
 			switch {
-			case strings.HasPrefix(r.URL.Path, QUERY_URI):
+			case strings.HasPrefix(r.URL.Path, rest.QUERY_URI):
 				w.Header().Set("Content-Type", "application/json")
 				values := r.URL.Query()
 				filter := values.Get("filter")
 				switch {
 				case strings.Contains(filter, "api"):
-					_, _ = w.Write([]byte(apisJson))
+					_, _ = w.Write([]byte(ApisJson))
 					//if strings.Contains(filter, "metadata") {
 					//	_, _ = w.Write([]byte(apisJsonFromTags))
 					//} else {
 					//	_, _ = w.Write([]byte(apisJson))
 					//}
 				case strings.Contains(filter, "component"):
-					_, _ = w.Write([]byte(componentsJson))
+					_, _ = w.Write([]byte(ComponentsJson))
 				case strings.Contains(filter, "resource"):
-					_, _ = w.Write([]byte(resourcesJson))
+					_, _ = w.Write([]byte(ResourcesJson))
 					//if strings.Contains(filter, "metadata") {
 					//	_, _ = w.Write([]byte(resourcesFromTagsJson))
 					//} else {
@@ -80,19 +72,19 @@ func CreateServer(t *testing.T) *httptest.Server {
 					_, _ = w.Write([]byte(fmt.Sprintf(TestJSONStringOneLinePlusQueryParam, r.URL.Query().Encode())))
 				}
 
-			case strings.HasPrefix(r.URL.Path, LOCATION_URI):
-				path := strings.TrimPrefix(r.URL.Path, LOCATION_URI)
+			case strings.HasPrefix(r.URL.Path, rest.LOCATION_URI):
+				path := strings.TrimPrefix(r.URL.Path, rest.LOCATION_URI)
 				w.Header().Set("Content-Type", "application/json")
 				if strings.Contains(path, "404") {
 					w.WriteHeader(404)
 					return
 				}
 				_, _ = w.Write([]byte(fmt.Sprintf(TestJSONStringOneLinePlusPathParam, path)))
-			case strings.HasPrefix(r.URL.Path, API_URI):
-				path := strings.TrimPrefix(r.URL.Path, LOCATION_URI)
+			case strings.HasPrefix(r.URL.Path, rest.API_URI):
+				path := strings.TrimPrefix(r.URL.Path, rest.LOCATION_URI)
 				w.Header().Set("Content-Type", "application/json")
 				_, _ = w.Write([]byte(fmt.Sprintf(TestJSONStringOneLinePlusPathParam, path)))
-			case strings.HasPrefix(r.URL.Path, ENTITIES_URI):
+			case strings.HasPrefix(r.URL.Path, rest.ENTITIES_URI):
 				w.Header().Set("Content-Type", "application/json")
 				segs := strings.Split(r.URL.Path, "/")
 				ns := segs[len(segs)-2]
@@ -102,9 +94,9 @@ func CreateServer(t *testing.T) *httptest.Server {
 				}
 				_, _ = w.Write([]byte(fmt.Sprintf(TestJSONStringOneLinePlusPathParam, fmt.Sprintf("%s:%s", ns, segs[len(segs)-1]))))
 			}
-		case stub.MethodPost:
+		case MethodPost:
 			switch r.URL.Path {
-			case LOCATION_URI:
+			case rest.LOCATION_URI:
 				w.Header().Set("Content-Type", "application/json")
 				bodyBuf, err := io.ReadAll(r.Body)
 				if err != nil {
@@ -130,10 +122,10 @@ func CreateServer(t *testing.T) *httptest.Server {
 				}
 				_, _ = w.Write([]byte(fmt.Sprintf(TestPostJSONStringOneLinePlusBody, data.Target)))
 			}
-		case stub.MethodDelete:
+		case MethodDelete:
 			switch {
-			case strings.HasPrefix(r.URL.Path, LOCATION_URI):
-				path := strings.TrimPrefix(r.URL.Path, LOCATION_URI)
+			case strings.HasPrefix(r.URL.Path, rest.LOCATION_URI):
+				path := strings.TrimPrefix(r.URL.Path, rest.LOCATION_URI)
 				if strings.Contains(path, "404") {
 					w.WriteHeader(404)
 					return
@@ -150,21 +142,4 @@ func CreateServer(t *testing.T) *httptest.Server {
 type Post struct {
 	Target string `json:"target"`
 	Type   string `json:"type"`
-}
-
-func TestSetContext(t *testing.T) {
-	ts := CreateServer(t)
-	defer ts.Close()
-
-	resp, err := stub.DC().R().
-		SetContext(context.Background()).
-		Get(ts.URL + "/")
-
-	stub.AssertError(t, err)
-	stub.AssertEqual(t, http.StatusOK, resp.StatusCode())
-	stub.AssertEqual(t, "200 OK", resp.Status())
-	stub.AssertEqual(t, true, resp.Body() != nil)
-	stub.AssertEqual(t, "TestGet: text response", resp.String())
-
-	stub.LogResponse(t, resp)
 }

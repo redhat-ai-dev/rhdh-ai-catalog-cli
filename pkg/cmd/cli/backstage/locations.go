@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 	"strings"
 )
 
 func (b *BackstageRESTClientWrapper) ListLocations() (string, error) {
-	str, err := b.getFromBackstage(b.RootURL + LOCATION_URI)
+	str, err := b.getFromBackstage(b.RootURL + rest.LOCATION_URI)
 	if err != nil {
 		return "", err
 	}
@@ -24,7 +25,7 @@ func (b *BackstageRESTClientWrapper) GetLocation(args ...string) (string, error)
 	}
 	buffer := &bytes.Buffer{}
 	for _, id := range args {
-		str, err := b.getFromBackstage(b.RootURL + LOCATION_URI + "/" + id)
+		str, err := b.getFromBackstage(b.RootURL + rest.LOCATION_URI + "/" + id)
 		if err != nil {
 			return buffer.String(), err
 		}
@@ -37,13 +38,13 @@ func (b *BackstageRESTClientWrapper) GetLocation(args ...string) (string, error)
 
 func (b *BackstageRESTClientWrapper) ImportLocation(url string) (map[string]any, error) {
 	if strings.Contains(url, "github") {
-		return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "url"})
+		return b.postToBackstage(b.RootURL+rest.LOCATION_URI, map[string]interface{}{"target": url, "type": "url"})
 	}
-	return b.postToBackstage(b.RootURL+LOCATION_URI, map[string]interface{}{"target": url, "type": "rhdh-rhoai-bridge"})
+	return b.postToBackstage(b.RootURL+rest.LOCATION_URI, map[string]interface{}{"target": url, "type": "rhdh-rhoai-bridge"})
 }
 
 func (b *BackstageRESTClientWrapper) DeleteLocation(id string) (string, error) {
-	return b.deleteFromBackstage(b.RootURL + LOCATION_URI + "/" + id)
+	return b.deleteFromBackstage(b.RootURL + rest.LOCATION_URI + "/" + id)
 }
 
 func (b *BackstageRESTClientWrapper) PrintImportLocation(retJSON map[string]any) (string, error) {

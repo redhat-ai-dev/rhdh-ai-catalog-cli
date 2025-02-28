@@ -63,14 +63,34 @@ func GetCurrentProject() string {
 	matchVersionKubeConfigFlags := kcmdutil.NewMatchVersionFlags(kubeConfigFlags)
 	f := kcmdutil.NewFactory(matchVersionKubeConfigFlags)
 	cfg, err := f.ToRawKubeConfigLoader().RawConfig()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: could not get default project: %v", err)
-		return ""
-	}
 	currentProject := ""
-	currentContext := cfg.Contexts[cfg.CurrentContext]
-	if currentContext != nil {
-		currentProject = currentContext.Namespace
+	if err == nil {
+		currentContext := cfg.Contexts[cfg.CurrentContext]
+		if currentContext != nil {
+			currentProject = currentContext.Namespace
+		}
+		return currentProject
+	}
+	fmt.Fprintf(os.Stderr, "ERROR: could not get default project from kubeconfig: %v", err)
+	// see if we are running in pod, or the NAMESPACE env var is set
+	b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+	currentProject = string(b)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error fetching token from k8s pod: %s", err.Error())
+		currentProject = os.Getenv("NAMESPACE")
 	}
 	return currentProject
+}
+
+func GetCurrentToken(cfg *rest.Config) string {
+	token := cfg.BearerToken
+	if len(token) == 0 {
+		b, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+		token = string(b)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error fetching token from k8s pod: %s", err.Error())
+			token = os.Getenv("K8S_TOKEN")
+		}
+	}
+	return token
 }

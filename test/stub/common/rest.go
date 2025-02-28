@@ -1,4 +1,4 @@
-package stub
+package common
 
 import (
 	"github.com/go-resty/resty/v2"

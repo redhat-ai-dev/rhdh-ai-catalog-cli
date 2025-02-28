@@ -1,23 +1,23 @@
 package storage
 
-import "k8s.io/client-go/rest"
+import (
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/server/storage/configmap"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/types"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
+)
 
-type BridgeStorage interface {
-	Initialize(cfg *rest.Config)
-	Fetch(key string) (any, error)
-	Upsert(key string, value any) error
-	Remove(key string) error
-}
-
-type BridgeStorageType string
-
-const ConfigMapBridgeStorage BridgeStorageType = "ConfigMap"
-const GithubBridgeStorage BridgeStorageType = "Github"
-
-func NewBridgeStorage(storageType BridgeStorageType) BridgeStorage {
+func NewBridgeStorage(storageType types.BridgeStorageType) types.BridgeStorage {
 	switch storageType {
-	case ConfigMapBridgeStorage:
-	case GithubBridgeStorage:
+	case types.ConfigMapBridgeStorage:
+		st := configmap.ConfigMapBridgeStorage{}
+		cfg, err := util.GetK8sConfig(&config.Config{})
+		if err != nil {
+			return nil
+		}
+		st.Initialize(cfg)
+		return &st
+	case types.GithubBridgeStorage:
 	}
 	return nil
 }

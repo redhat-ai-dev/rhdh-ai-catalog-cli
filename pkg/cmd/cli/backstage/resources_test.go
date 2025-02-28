@@ -1,33 +1,34 @@
 package backstage
 
 import (
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/backstage"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
 	"testing"
 )
 
 func TestListResources(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	// Get with no args calls List
 	str, err := SetupBackstageTestRESTClient(ts).GetResource()
-	stub.AssertError(t, err)
-	stub.AssertLineCompare(t, str, stub.Resources, 0)
+	common.AssertError(t, err)
+	common.AssertLineCompare(t, str, common.Resources, 0)
 }
 
 func TestGetResources(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	nsName := "default:phi-mini-instruct"
 	str, err := SetupBackstageTestRESTClient(ts).GetResource(nsName)
 
-	stub.AssertError(t, err)
-	stub.AssertContains(t, str, []string{nsName})
+	common.AssertError(t, err)
+	common.AssertContains(t, str, []string{nsName})
 }
 
 func TestGetResourceError(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	nsName := "404:404"
@@ -38,7 +39,7 @@ func TestGetResourceError(t *testing.T) {
 }
 
 func TestGetResourceWithTags(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	bs := SetupBackstageTestRESTClient(ts)
@@ -54,17 +55,17 @@ func TestGetResourceWithTags(t *testing.T) {
 		},
 		{
 			args: []string{"task-text-generation", "multilingual", "meta", "llm", "llama", "genai", "conversational", "1b"},
-			str:  stub.ResourcesFromTagsNoSubset,
+			str:  common.ResourcesFromTagsNoSubset,
 		},
 		{
 			args:   []string{"genai", "meta"},
 			subset: true,
-			str:    stub.ResourcesFromTags,
+			str:    common.ResourcesFromTags,
 		},
 	} {
 		bs.Subset = tc.subset
 		str, err := bs.GetResource(tc.args...)
-		stub.AssertError(t, err)
-		stub.AssertLineCompare(t, str, tc.str, 0)
+		common.AssertError(t, err)
+		common.AssertLineCompare(t, str, tc.str, 0)
 	}
 }

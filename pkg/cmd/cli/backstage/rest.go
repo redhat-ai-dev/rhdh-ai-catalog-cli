@@ -7,7 +7,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
 	"k8s.io/klog/v2"
 	"net/http/httptest"
 	nurl "net/url"
@@ -30,13 +30,6 @@ func init() {
 		klog.Errorf("Unable to get Backstage REST client wrapper")
 		os.Exit(1)
 	}
-}
-
-func SetupBackstageTestRESTClient(ts *httptest.Server) *BackstageRESTClientWrapper {
-	backstageTestRESTClient := &BackstageRESTClientWrapper{}
-	backstageTestRESTClient.RESTClient = stub.DC()
-	backstageTestRESTClient.RootURL = ts.URL
-	return backstageTestRESTClient
 }
 
 func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
@@ -144,4 +137,11 @@ func (k *BackstageRESTClientWrapper) deleteFromBackstage(url string) (string, er
 		return "", err
 	}
 	return k.processDelete(resp, url, "delete")
+}
+
+func SetupBackstageTestRESTClient(ts *httptest.Server) *BackstageRESTClientWrapper {
+	backstageTestRESTClient := &BackstageRESTClientWrapper{}
+	backstageTestRESTClient.RESTClient = common.DC()
+	backstageTestRESTClient.RootURL = ts.URL
+	return backstageTestRESTClient
 }

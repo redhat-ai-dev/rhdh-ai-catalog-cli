@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	cobra2 "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/cobra"
 	"github.com/spf13/cobra"
 	"strings"
 	"testing"
@@ -101,7 +101,7 @@ func TestNewCmd(t *testing.T) {
 			generatesHelp: true,
 		},
 	} {
-		subCmd, stdout, stderr, err := stub.ExecuteCommandC(cmd, tc.args...)
+		subCmd, stdout, stderr, err := cobra2.ExecuteCommandC(cmd, tc.args...)
 		switch {
 		case err == nil && tc.generatesError:
 			t.Errorf("error should have been generated for '%s'", strings.Join(tc.args, " "))

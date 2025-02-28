@@ -2,14 +2,16 @@ package kubeflowmodelregistry
 
 import (
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	cobra2 "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/cobra"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/kfmr"
 	"github.com/spf13/cobra"
 	"strings"
 	"testing"
 )
 
 func TestNewCmd(t *testing.T) {
-	ts := stub.CreateGetServer(t)
+	ts := kfmr.CreateGetServer(t)
 	defer ts.Close()
 	for _, tc := range []struct {
 		args           []string
@@ -43,9 +45,9 @@ func TestNewCmd(t *testing.T) {
 		},
 	} {
 		cfg := &config.Config{}
-		stub.SetupKubeflowTestRESTClient(ts, cfg)
+		kfmr.SetupKubeflowTestRESTClient(ts, cfg)
 		cmd := NewCmd(cfg)
-		subCmd, stdout, stderr, err := stub.ExecuteCommandC(cmd, tc.args...)
+		subCmd, stdout, stderr, err := cobra2.ExecuteCommandC(cmd, tc.args...)
 		switch {
 		case err == nil && tc.generatesError:
 			t.Errorf("error should have been generated for '%s'", strings.Join(tc.args, " "))
@@ -57,7 +59,7 @@ func TestNewCmd(t *testing.T) {
 			t.Errorf("unexpected help output for '%s' - got '%s' but expected '%s'", strings.Join(tc.args, " "), stdout, subCmd.Long)
 		case err == nil && !tc.generatesError:
 			for _, str := range tc.outStr {
-				stub.AssertLineCompare(t, stdout, str, 0)
+				common.AssertLineCompare(t, stdout, str, 0)
 			}
 		}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"k8s.io/klog/v2"
 	"net/http"
@@ -63,7 +64,7 @@ func (i *ImportLocationServer) Run(stopCh <-chan struct{}) {
 			case <-ch:
 				return
 			default:
-				err := i.router.Run(":8080")
+				err := i.router.Run(":9090")
 				if err != nil {
 					klog.Errorf("ERROR: gin-gonic run error %s", err.Error())
 				}
@@ -100,10 +101,6 @@ func (i *ImportLocationServer) handleCatalogDiscoveryGet(c *gin.Context) {
 	c.Data(http.StatusOK, "Content-Type: application/json", content)
 }
 
-type PostBody struct {
-	Body []byte `json:"body"`
-}
-
 func (u *ImportLocationServer) handleCatalogUpsertPost(c *gin.Context) {
 	key := c.Query("key")
 	if len(key) == 0 {
@@ -111,7 +108,7 @@ func (u *ImportLocationServer) handleCatalogUpsertPost(c *gin.Context) {
 		c.Error(fmt.Errorf("need a 'key' parameter"))
 		return
 	}
-	var postBody PostBody
+	var postBody rest.PostBody
 	err := c.BindJSON(&postBody)
 	if err != nil {
 		c.Status(http.StatusBadRequest)

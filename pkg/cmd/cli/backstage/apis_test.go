@@ -1,34 +1,35 @@
 package backstage
 
 import (
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/backstage"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
 	"testing"
 )
 
 func TestListAPIs(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	// Get with no args calls List
 	str, err := SetupBackstageTestRESTClient(ts).GetAPI()
 
-	stub.AssertError(t, err)
-	stub.AssertLineCompare(t, str, stub.Apis, 0)
+	common.AssertError(t, err)
+	common.AssertLineCompare(t, str, common.Apis, 0)
 }
 
 func TestGetAPIs(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	nsName := "default:ollama-service-api"
 	str, err := SetupBackstageTestRESTClient(ts).GetAPI(nsName)
 
-	stub.AssertError(t, err)
-	stub.AssertContains(t, str, []string{nsName})
+	common.AssertError(t, err)
+	common.AssertContains(t, str, []string{nsName})
 }
 
 func TestGetAPIsError(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	nsName := "404:404"
@@ -39,7 +40,7 @@ func TestGetAPIsError(t *testing.T) {
 }
 
 func TestGetAPIsWithTags(t *testing.T) {
-	ts := stub.CreateServer(t)
+	ts := backstage.CreateServer(t)
 	defer ts.Close()
 
 	bs := SetupBackstageTestRESTClient(ts)
@@ -55,17 +56,17 @@ func TestGetAPIsWithTags(t *testing.T) {
 		},
 		{
 			args: []string{"vllm", "api", "openai"},
-			str:  stub.ApisFromTagsNoSubset,
+			str:  common.ApisFromTagsNoSubset,
 		},
 		{
 			args:   []string{"vllm"},
 			subset: true,
-			str:    stub.ApisFromTags,
+			str:    common.ApisFromTags,
 		},
 	} {
 		bs.Subset = tc.subset
 		str, err := bs.GetAPI(tc.args...)
-		stub.AssertError(t, err)
-		stub.AssertLineCompare(t, str, tc.str, 0)
+		common.AssertError(t, err)
+		common.AssertLineCompare(t, str, tc.str, 0)
 	}
 }

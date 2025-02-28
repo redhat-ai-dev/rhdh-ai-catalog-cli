@@ -5,11 +5,12 @@ import (
 	"fmt"
 	serverapiv1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	routev1 "github.com/openshift/api/route/v1"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/server/gin-gonic-http/server"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/kfmr"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/location"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/storage"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -24,24 +25,23 @@ import (
 func TestReconcile(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = serverapiv1beta1.AddToScheme(scheme)
-	bts := stub.CreateServer(t)
-	defer bts.Close()
-	kts1 := stub.CreateGetServerWithInference(t)
+	kts1 := kfmr.CreateGetServerWithInference(t)
 	defer kts1.Close()
-	kts2 := stub.CreateGetServer(t)
+	kts2 := kfmr.CreateGetServer(t)
 	defer kts2.Close()
-	brts := stub.CreateBridgeLocationServer(t)
+	brts := location.CreateBridgeLocationServer(t)
 	defer brts.Close()
+	callback := sync.Map{}
+	bsts := storage.CreateBridgeStorageRESTClient(t, &callback)
+	defer bsts.Close()
 
 	r := &RHOAINormalizerReconcile{
-		scheme:           scheme,
-		eventRecorder:    nil,
-		k8sToken:         "",
-		locationRouteURL: "",
-		myNS:             "",
-		routeClient:      nil,
-		bkstg:            backstage.SetupBackstageTestRESTClient(bts),
-		brdgImport:       stub.SetupBridgeLocationRESTClient(brts),
+		scheme:        scheme,
+		eventRecorder: nil,
+		k8sToken:      "",
+		myNS:          "",
+		routeClient:   nil,
+		storage:       storage.SetupBridgeStorageRESTClient(bsts),
 	}
 
 	for _, tc := range []struct {
@@ -49,7 +49,6 @@ func TestReconcile(t *testing.T) {
 		is            *serverapiv1beta1.InferenceService
 		route         *routev1.Route
 		kfmrSvr       *httptest.Server
-		expectedKey   string
 		expectedValue string
 	}{
 		{
@@ -59,7 +58,6 @@ func TestReconcile(t *testing.T) {
 				Spec:       serverapiv1beta1.InferenceServiceSpec{},
 				Status:     serverapiv1beta1.InferenceServiceStatus{},
 			},
-			expectedKey:   "/foo/bar/catalog-info.yaml",
 			expectedValue: "description: KServe instance foo:bar",
 		},
 		{
@@ -76,7 +74,6 @@ func TestReconcile(t *testing.T) {
 				Status:     serverapiv1beta1.InferenceServiceStatus{},
 			},
 			kfmrSvr:       kts2,
-			expectedKey:   "/faa/bor/catalog-info.yaml",
 			expectedValue: "description: KServe instance faa:bor",
 		},
 		{
@@ -93,67 +90,59 @@ func TestReconcile(t *testing.T) {
 				Status:     serverapiv1beta1.InferenceServiceStatus{},
 			},
 			kfmrSvr:       kts1,
-			expectedKey:   "/mnist/v1/catalog-info.yaml",
 			expectedValue: "url: https://huggingface.co/tarilabs/mnist/resolve/v20231206163028/mnist.onnx",
 		},
 	} {
 		ctx := context.TODO()
 		objs := []client.Object{tc.is}
-		r.pushedLocations = sync.Map{}
 		if tc.kfmrSvr != nil {
 			cfg := &config.Config{}
-			stub.SetupKubeflowTestRESTClient(tc.kfmrSvr, cfg)
+			kfmr.SetupKubeflowTestRESTClient(tc.kfmrSvr, cfg)
 			r.kfmr = kubeflowmodelregistry.SetupKubeflowRESTClient(cfg)
 		}
 		r.client = fake.NewClientBuilder().WithScheme(scheme).WithObjects(objs...).Build()
 		r.kfmrRoute = tc.route
 		r.Reconcile(ctx, reconcile.Request{types.NamespacedName{Namespace: tc.is.Namespace, Name: tc.is.Name}})
 		found := false
-		r.pushedLocations.Range(func(key, value any) bool {
-			t.Log(fmt.Sprintf("found key %s for test %s", key, tc.name))
-			if key == tc.expectedKey {
-				found = true
-			}
-			if found {
-				postBody, ok := value.(*server.PostBody)
-				stub.AssertEqual(t, ok, true)
-				pb := string(postBody.Body)
-				stub.AssertContains(t, pb, []string{tc.expectedValue})
-			}
+		callback.Range(func(key, value any) bool {
+			found = true
+			t.Logf(fmt.Sprintf("found key %s for test %s", key, tc.name))
+			postStr, ok := value.(string)
+			common.AssertEqual(t, ok, true)
+			common.AssertContains(t, postStr, []string{tc.expectedValue})
 
 			return true
 		})
-		stub.AssertEqual(t, found, true)
+		common.AssertEqual(t, found, true)
 	}
 }
 
 func TestStart(t *testing.T) {
 	scheme := runtime.NewScheme()
 	_ = serverapiv1beta1.AddToScheme(scheme)
-	bts := stub.CreateServer(t)
-	defer bts.Close()
-	kts1 := stub.CreateGetServerWithInference(t)
+	kts1 := kfmr.CreateGetServerWithInference(t)
 	defer kts1.Close()
-	kts2 := stub.CreateGetServer(t)
+	kts2 := kfmr.CreateGetServer(t)
 	defer kts2.Close()
-	brts := stub.CreateBridgeLocationServer(t)
+	brts := location.CreateBridgeLocationServer(t)
 	defer brts.Close()
+	callback := sync.Map{}
+	bsts := storage.CreateBridgeStorageRESTClient(t, &callback)
+	defer bsts.Close()
 
 	r := &RHOAINormalizerReconcile{
-		scheme:           scheme,
-		eventRecorder:    nil,
-		k8sToken:         "",
-		locationRouteURL: "",
-		myNS:             "",
-		routeClient:      nil,
+		scheme:        scheme,
+		eventRecorder: nil,
+		k8sToken:      "",
+		myNS:          "",
+		routeClient:   nil,
 		kfmrRoute: &routev1.Route{
 			Spec: routev1.RouteSpec{
 				Host: "http://foo.com",
 			},
 			Status: routev1.RouteStatus{Ingress: []routev1.RouteIngress{{}}},
 		},
-		bkstg:      backstage.SetupBackstageTestRESTClient(bts),
-		brdgImport: stub.SetupBridgeLocationRESTClient(brts),
+		storage: storage.SetupBridgeStorageRESTClient(bsts),
 	}
 
 	for _, tc := range []struct {
@@ -188,10 +177,9 @@ func TestStart(t *testing.T) {
 	} {
 		ctx := context.TODO()
 		objs := []client.Object{tc.is}
-		r.pushedLocations = sync.Map{}
 		if tc.kfmrSvr != nil {
 			cfg := &config.Config{}
-			stub.SetupKubeflowTestRESTClient(tc.kfmrSvr, cfg)
+			kfmr.SetupKubeflowTestRESTClient(tc.kfmrSvr, cfg)
 			r.kfmr = kubeflowmodelregistry.SetupKubeflowRESTClient(cfg)
 		}
 		r.client = fake.NewClientBuilder().WithScheme(scheme).WithObjects(objs...).Build()
@@ -199,21 +187,16 @@ func TestStart(t *testing.T) {
 		r.innerStart(ctx)
 
 		found := false
-		r.pushedLocations.Range(func(key, value any) bool {
-			t.Log(fmt.Sprintf("found key %s for test %s", key, tc.name))
-			if key == tc.expectedKey {
-				found = true
-			}
-			if found {
-				postBody, ok := value.(*server.PostBody)
-				stub.AssertEqual(t, ok, true)
-				pb := string(postBody.Body)
-				stub.AssertContains(t, pb, []string{tc.expectedValue})
-			}
+		callback.Range(func(key, value any) bool {
+			found = true
+			t.Logf(fmt.Sprintf("found key %s for test %s", key, tc.name))
+			postStr, ok := value.(string)
+			common.AssertEqual(t, ok, true)
+			common.AssertContains(t, postStr, []string{tc.expectedValue})
 
 			return true
 		})
-		stub.AssertEqual(t, found, true)
+		common.AssertEqual(t, found, true)
 	}
 
 }

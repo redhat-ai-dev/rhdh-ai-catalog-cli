@@ -1,0 +1,10 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: bac-import-model
+spec:
+  to:
+    kind: Service
+    name: bac-import-model
+    weight: 100
+  wildcardPolicy: None

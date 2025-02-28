@@ -4,22 +4,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/go-resty/resty/v2"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
 	"k8s.io/klog/v2"
+	"net/http/httptest"
 	nurl "net/url"
 	"os"
-)
-
-const (
-	BASE_URI      = "/api/catalog"
-	LOCATION_URI  = "/locations"
-	ENTITIES_URI  = "/entities"
-	COMPONENT_URI = "/entities/by-name/component/%s/%s"
-	RESOURCE_URI  = "/entities/by-name/resource/%s/%s"
-	API_URI       = "/entities/by-name/api/%s/%s"
-	QUERY_URI     = "/entities/by-query"
-	DEFAULT_NS    = "default"
 )
 
 type BackstageRESTClientWrapper struct {
@@ -51,7 +43,7 @@ func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
 	}
 	backstageRESTClient.RESTClient.SetTLSClientConfig(tlsCfg)
 	backstageRESTClient.Token = cfg.BackstageToken
-	backstageRESTClient.RootURL = cfg.BackstageURL + BASE_URI
+	backstageRESTClient.RootURL = cfg.BackstageURL + rest.BASE_URI
 
 	backstageRESTClient.Tags = cfg.ParamsAsTags
 	backstageRESTClient.Subset = cfg.AnySubsetWorks
@@ -59,51 +51,37 @@ func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
 	return backstageRESTClient
 }
 
-func (k *BackstageRESTClientWrapper) processUpdate(resp *resty.Response, action, url, body string) (string, error) {
+func (k *BackstageRESTClientWrapper) processUpdate(resp *resty.Response, action, url, body string) (map[string]any, error) {
 	postResp := resp.String()
 	rc := resp.StatusCode()
 	if rc != 200 && rc != 201 {
-		return "", fmt.Errorf("%s %s with body %s status code %d resp: %s\n", url, action, body, rc, postResp)
+		return nil, fmt.Errorf("%s %s with body %s status code %d resp: %s\n", url, action, body, rc, postResp)
 	} else {
 		klog.V(4).Infof("%s %s with body %s status code %d resp: %s\n", url, action, body, rc, postResp)
 	}
 	return k.processBody(resp)
 }
 
-func (k *BackstageRESTClientWrapper) processBody(resp *resty.Response) (string, error) {
+func (k *BackstageRESTClientWrapper) processBody(resp *resty.Response) (map[string]any, error) {
 	retJSON := make(map[string]any)
 	err := json.Unmarshal(resp.Body(), &retJSON)
 	if err != nil {
-		return "", fmt.Errorf("json unmarshall error for %s: %s\n", resp.Body(), err.Error())
+		return nil, fmt.Errorf("json unmarshall error for %s: %s\n", resp.Body(), err.Error())
 	}
-	var location interface{}
-	var id interface{}
-	var target interface{}
-	var ok bool
-	location, ok = retJSON["location"]
-	if ok {
-		locationMap, o1 := location.(map[string]interface{})
-		if o1 {
-			id = locationMap["id"]
-			target = locationMap["target"]
-		}
-		return fmt.Sprintf("Backstage location %s from %s created", id, target), nil
-	}
-	id, ok = retJSON["id"]
-	if ok {
-		target, ok = retJSON["target"]
-		if ok {
-			return fmt.Sprintf("Backstage location %s from %s created", id, target), nil
-		}
-		return fmt.Sprintf("Backstage location %s created", id), nil
-	}
-	return fmt.Sprintf("%#v", retJSON), nil
+	return retJSON, err
 }
 
-func (k *BackstageRESTClientWrapper) postToBackstage(url string, body interface{}) (string, error) {
+func (k *BackstageRESTClientWrapper) postToBackstage(url string, body interface{}) (map[string]any, error) {
 	resp, err := backstageRESTClient.RESTClient.R().SetAuthToken(k.Token).SetBody(body).SetHeader("Accept", "application/json").Post(url)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+	rc := resp.StatusCode()
+	if rc != 200 && rc != 201 {
+		return nil, fmt.Errorf("post for %s rc %d body %s\n", url, rc, resp.String())
+	} else {
+		klog.V(4).Infof("post for %s returned ok\n", url)
+
 	}
 
 	return k.processUpdate(resp, "post", url, fmt.Sprintf("%#v", body))
@@ -159,4 +137,11 @@ func (k *BackstageRESTClientWrapper) deleteFromBackstage(url string) (string, er
 		return "", err
 	}
 	return k.processDelete(resp, url, "delete")
+}
+
+func SetupBackstageTestRESTClient(ts *httptest.Server) *BackstageRESTClientWrapper {
+	backstageTestRESTClient := &BackstageRESTClientWrapper{}
+	backstageTestRESTClient.RESTClient = common.DC()
+	backstageTestRESTClient.RootURL = ts.URL
+	return backstageTestRESTClient
 }

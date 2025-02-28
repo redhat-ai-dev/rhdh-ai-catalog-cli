@@ -3,10 +3,11 @@ package backstage
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 )
 
 func (b *BackstageRESTClientWrapper) ListEntities() (string, error) {
-	str, err := b.getFromBackstage(b.RootURL + ENTITIES_URI)
+	str, err := b.getFromBackstage(b.RootURL + rest.ENTITIES_URI)
 	if err != nil {
 		return "", err
 	}

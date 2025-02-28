@@ -10,6 +10,7 @@ import (
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
+	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	"os"
@@ -61,6 +62,9 @@ func (pop *CommonPopulator) GetLifecycle() string {
 }
 
 func (pop *CommonPopulator) GetName() string {
+	if pop.InferSvc == nil {
+		return ""
+	}
 	return fmt.Sprintf("%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)
 }
 func (pop *CommonPopulator) GetDescription() string {
@@ -69,6 +73,9 @@ func (pop *CommonPopulator) GetDescription() string {
 
 func (pop *CommonPopulator) GetLinks() []backstage.EntityLink {
 	links := []backstage.EntityLink{}
+	if pop.InferSvc == nil {
+		return links
+	}
 	if pop.InferSvc.Status.URL != nil {
 		links = append(links, backstage.EntityLink{
 			URL:   pop.InferSvc.Status.URL.String(),
@@ -115,6 +122,9 @@ func (pop *CommonPopulator) GetLinks() []backstage.EntityLink {
 
 func (pop *CommonPopulator) GetTags() []string {
 	tags := []string{}
+	if pop.InferSvc == nil {
+		return tags
+	}
 	predictor := pop.InferSvc.Spec.Predictor
 	// one and only one predictor spec can be set
 	switch {
@@ -165,50 +175,56 @@ func (pop *CommonPopulator) GetTags() []string {
 }
 
 func (pop *CommonPopulator) GetProvidedAPIs() []string {
+	if pop.InferSvc == nil {
+		return []string{}
+	}
 	return []string{fmt.Sprintf("%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
-type componentPopulator struct {
+type ComponentPopulator struct {
 	CommonPopulator
 }
 
-func (pop *componentPopulator) GetDependsOn() []string {
+func (pop *ComponentPopulator) GetDependsOn() []string {
 	return []string{fmt.Sprintf("resource:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name), fmt.Sprintf("api:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
-func (pop *componentPopulator) GetTechdocRef() string {
+func (pop *ComponentPopulator) GetTechdocRef() string {
 	return "./"
 }
 
-func (pop *componentPopulator) GetDisplayName() string {
+func (pop *ComponentPopulator) GetDisplayName() string {
 	return pop.GetName()
 }
 
-type resourcePopulator struct {
+type ResourcePopulator struct {
 	CommonPopulator
 }
 
-func (pop *resourcePopulator) GetDependencyOf() []string {
+func (pop *ResourcePopulator) GetDependencyOf() []string {
 	return []string{fmt.Sprintf("component:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
-func (pop *resourcePopulator) GetTechdocRef() string {
+func (pop *ResourcePopulator) GetTechdocRef() string {
 	return "resource/"
 }
 
-func (pop *resourcePopulator) GetDisplayName() string {
+func (pop *ResourcePopulator) GetDisplayName() string {
 	return pop.GetName()
 }
 
-type apiPopulator struct {
+type ApiPopulator struct {
 	CommonPopulator
 }
 
-func (pop *apiPopulator) GetDependencyOf() []string {
+func (pop *ApiPopulator) GetDependencyOf() []string {
+	if pop.InferSvc == nil {
+		return []string{}
+	}
 	return []string{fmt.Sprintf("component:%s_%s", pop.InferSvc.Namespace, pop.InferSvc.Name)}
 }
 
-func (pop *apiPopulator) GetDefinition() string {
+func (pop *ApiPopulator) GetDefinition() string {
 	if pop.InferSvc.Status.URL == nil {
 		return ""
 	}
@@ -218,11 +234,11 @@ func (pop *apiPopulator) GetDefinition() string {
 	return dst.String()
 }
 
-func (pop *apiPopulator) GetTechdocRef() string {
+func (pop *ApiPopulator) GetTechdocRef() string {
 	return "api/"
 }
 
-func (pop *apiPopulator) GetDisplayName() string {
+func (pop *ApiPopulator) GetDisplayName() string {
 	return pop.GetName()
 }
 
@@ -286,7 +302,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 						return err
 					}
 
-					err = callBackstagePrinters(owner, lifecycle, is, cmd)
+					err = CallBackstagePrinters(owner, lifecycle, is, cmd.OutOrStdout())
 					if err != nil {
 						return err
 					}
@@ -299,7 +315,7 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 					return err
 				}
 				for _, is := range isl.Items {
-					err = callBackstagePrinters(owner, lifecycle, &is, cmd)
+					err = CallBackstagePrinters(owner, lifecycle, &is, cmd.OutOrStdout())
 					if err != nil {
 						klog.Errorf("%s", err.Error())
 						klog.Flush()
@@ -314,29 +330,29 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func callBackstagePrinters(owner, lifecycle string, is *serverapiv1beta1.InferenceService, cmd *cobra.Command) error {
-	compPop := componentPopulator{}
+func CallBackstagePrinters(owner, lifecycle string, is *serverapiv1beta1.InferenceService, writer io.Writer) error {
+	compPop := ComponentPopulator{}
 	compPop.Owner = owner
 	compPop.Lifecycle = lifecycle
 	compPop.InferSvc = is
-	err := backstage.PrintComponent(&compPop, cmd)
+	err := backstage.PrintComponent(&compPop, writer)
 	if err != nil {
 		return err
 	}
 
-	resPop := resourcePopulator{}
+	resPop := ResourcePopulator{}
 	resPop.Owner = owner
 	resPop.Lifecycle = lifecycle
 	resPop.InferSvc = is
-	err = backstage.PrintResource(&resPop, cmd)
+	err = backstage.PrintResource(&resPop, writer)
 	if err != nil {
 		return err
 	}
 
-	apiPop := apiPopulator{}
+	apiPop := ApiPopulator{}
 	apiPop.Owner = owner
 	apiPop.Lifecycle = lifecycle
 	apiPop.InferSvc = is
-	err = backstage.PrintAPI(&apiPop, cmd)
+	err = backstage.PrintAPI(&apiPop, writer)
 	return err
 }

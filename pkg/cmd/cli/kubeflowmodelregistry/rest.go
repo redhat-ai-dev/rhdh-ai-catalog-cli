@@ -6,18 +6,9 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 	"k8s.io/klog/v2"
 	"os"
-)
-
-const (
-	BASE_URI                         = "/api/model_registry/v1alpha3"
-	GET_REG_MODEL_URI                = "/registered_models/%s"
-	LIST_VERSIONS_OFF_REG_MODELS_URI = "/registered_models/%s/versions"
-	LIST_ARTFIACTS_OFF_VERSIONS_URI  = "/model_versions/%s/artifacts"
-	LIST_INFERENCE_SERVICES_URI      = "/inference_services"
-	LIST_REG_MODEL_URI               = "/registered_models"
-	GET_SERVING_ENV_URI              = "/serving_environments/%s"
 )
 
 type KubeFlowRESTClientWrapper struct {
@@ -35,7 +26,7 @@ func SetupKubeflowRESTClient(cfg *config.Config) *KubeFlowRESTClientWrapper {
 	}
 	kubeFlowRESTClient := &KubeFlowRESTClientWrapper{
 		Token:      cfg.StoreToken,
-		RootURL:    cfg.StoreURL + BASE_URI,
+		RootURL:    cfg.StoreURL + rest.KFMR_BASE_URI,
 		RESTClient: cfg.KubeflowRESTClient,
 	}
 	if cfg.KubeflowRESTClient != nil {

@@ -25,9 +25,9 @@ type RegisteredModel struct {
 	Description *string `json:"description,omitempty"`
 	// The external id that come from the clients’ system. This field is optional. If set, it must be unique among all resources within a database instance.
 	ExternalId *string `json:"externalId,omitempty"`
-	// The client provided name of the artifact. This field is optional. If set, it must be unique among all the artifacts of the same artifact type within a database instance and cannot be changed once set.
+	// The client provided name of the model. It must be unique among all the RegisteredModels of the same type within a Model Registry instance and cannot be changed once set.
 	Name string `json:"name"`
-	// Output only. The unique server generated id of the resource.
+	// The unique server generated id of the resource.
 	Id *string `json:"id,omitempty"`
 	// Output only. Create time of the resource in millisecond since epoch.
 	CreateTimeSinceEpoch *string `json:"createTimeSinceEpoch,omitempty"`

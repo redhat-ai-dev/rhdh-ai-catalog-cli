@@ -1,13 +1,16 @@
 package cli
 
 import (
+	"context"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/server/location/client"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -218,7 +221,7 @@ func NewCmd() *cobra.Command {
 			if len(args) == 0 {
 				klog.Error("ERROR: delete-model requires a location ID")
 			}
-			processOutput(backstage.SetupBackstageRESTClient(cfg).DeleteLocation(args[0]))
+			util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).DeleteLocation(args[0]))
 		},
 	}
 	importModel := &cobra.Command{
@@ -232,7 +235,92 @@ func NewCmd() *cobra.Command {
 				klog.Flush()
 				return
 			}
-			processOutput(backstage.SetupBackstageRESTClient(cfg).ImportLocation(args[0]))
+			u, uerr := url.Parse(args[0])
+			if uerr != nil {
+				klog.Errorf("ERROR: import-model requires a valid location URL: %s", uerr.Error())
+				klog.Flush()
+				return
+			}
+			switch u.Scheme {
+			case "http":
+				fallthrough
+			case "https":
+				bkstgREST := backstage.SetupBackstageRESTClient(cfg)
+				retJSON, err := bkstgREST.ImportLocation(args[0])
+				if err != nil {
+					util.ProcessOutput("", err)
+				}
+				util.ProcessOutput(bkstgREST.PrintImportLocation(retJSON))
+				return
+			default:
+				klog.Errorf("ERROR: import-model only supports http and https prototype scheme URLs")
+			}
+
+		},
+	}
+
+	startBridge := &cobra.Command{
+		Use:     "start-bridge",
+		Aliases: []string{"sb"},
+		Long:    "start-bridge launches a REST API based service and K8s controller that serves as a normalization tier between Backstage and various AI model metadata systems.",
+		Example: "",
+		Run: func(cmd *cobra.Command, args []string) {
+			ctx := context.Background()
+			artifacts := client.NewArtifacts(ctx /*[]byte{},*/, cfg)
+			err := artifacts.Delete()
+			if err != nil {
+				klog.Errorf("ERROR: import-model: %s", err.Error())
+				klog.Flush()
+				return
+			}
+			err = artifacts.Create()
+			if err != nil {
+				klog.Errorf("ERROR: import-model: %s", err.Error())
+				klog.Flush()
+				return
+			}
+			err = artifacts.Ready()
+			if err != nil {
+				klog.Errorf("ERROR: import-model: %s", err.Error())
+				klog.Flush()
+				return
+			}
+
+		},
+	}
+
+	addBridgeContent := &cobra.Command{
+		Use:     "add-bridge-content",
+		Aliases: []string{"abc"},
+		Long:    "add-bridge-content updates the set of catalog-info.yaml files the bridge's REST API will return.",
+		// remember k8s CM keys can only contain alphanumerics and the '.', '-', and '_' symbols ... mention this in the help
+		Example: "",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) < 3 {
+				klog.Errorf("ERROR: need 'model-source string parameter, model-version string parameter, and local catalog-info.yaml file parameter")
+			}
+			u, uerr := url.Parse(args[2])
+			if uerr != nil {
+				klog.Errorf("ERROR: add-bridge-content given invalid catalog-info.yaml file location URL: %s", uerr.Error())
+				klog.Flush()
+				return
+			}
+			filePath := u.Path
+			var content []byte
+			var fileErr error
+			content, fileErr = os.ReadFile(filePath)
+			if fileErr != nil {
+				klog.Errorf("ERROR: add-bridge-content problem reading file %s: %s", filePath, fileErr.Error())
+				klog.Flush()
+				return
+			}
+			ctx := context.Background()
+			artifacts := client.NewArtifacts(ctx, cfg)
+			err := artifacts.AddContent(args[0]+"_"+args[1], content)
+			if err != nil {
+				klog.Errorf("ERROR: add-bridge-content problem adding content: %s", err.Error())
+				klog.Flush()
+			}
 		},
 	}
 
@@ -240,6 +328,8 @@ func NewCmd() *cobra.Command {
 	bkstgAI.AddCommand(queryModel)
 	bkstgAI.AddCommand(deleteModel)
 	bkstgAI.AddCommand(importModel)
+	bkstgAI.AddCommand(startBridge)
+	bkstgAI.AddCommand(addBridgeContent)
 
 	queryModel.AddCommand(&cobra.Command{
 		Use:     "entities",
@@ -249,7 +339,7 @@ func NewCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			str, err := backstage.SetupBackstageRESTClient(cfg).ListEntities()
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 
 		},
@@ -262,7 +352,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getLocationsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetLocation(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -274,7 +364,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getComponentsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetComponent(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -286,7 +376,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getResourcesExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetResource(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -298,7 +388,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getApisExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetAPI(args...)
-			processOutput(str, err)
+			util.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -309,13 +399,4 @@ func NewCmd() *cobra.Command {
 		"When set with 'use-params-as-tags', this just requires the tags provided to be set, but allows for additional tags to be set")
 
 	return bkstgAI
-}
-
-func processOutput(str string, err error) {
-	klog.Infoln(str)
-	klog.Flush()
-	if err != nil {
-		klog.Errorf("%s", err.Error())
-		klog.Flush()
-	}
 }

@@ -2,14 +2,16 @@ package kubeflowmodelregistry
 
 import (
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	cobra2 "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/cobra"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/kfmr"
 	"github.com/spf13/cobra"
 	"strings"
 	"testing"
 )
 
 func TestNewCmd(t *testing.T) {
-	ts := CreateGetServer(t)
+	ts := kfmr.CreateGetServer(t)
 	defer ts.Close()
 	for _, tc := range []struct {
 		args           []string
@@ -29,23 +31,23 @@ func TestNewCmd(t *testing.T) {
 			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
-			args:           []string{"owner"},
+			args:           []string{"Owner"},
 			generatesError: true,
 			errorStr:       "need to specify an Owner and Lifecycle setting",
 		},
 		{
-			args:   []string{"owner", "lifecycle"},
+			args:   []string{"Owner", "Lifecycle"},
 			outStr: []string{listOutput},
 		},
 		{
-			args:   []string{"owner", "lifecycle", "1"},
+			args:   []string{"Owner", "Lifecycle", "1"},
 			outStr: []string{listOutput},
 		},
 	} {
 		cfg := &config.Config{}
-		SetupKubeflowTestRESTClient(ts, cfg)
+		kfmr.SetupKubeflowTestRESTClient(ts, cfg)
 		cmd := NewCmd(cfg)
-		subCmd, stdout, stderr, err := stub.ExecuteCommandC(cmd, tc.args...)
+		subCmd, stdout, stderr, err := cobra2.ExecuteCommandC(cmd, tc.args...)
 		switch {
 		case err == nil && tc.generatesError:
 			t.Errorf("error should have been generated for '%s'", strings.Join(tc.args, " "))
@@ -57,7 +59,7 @@ func TestNewCmd(t *testing.T) {
 			t.Errorf("unexpected help output for '%s' - got '%s' but expected '%s'", strings.Join(tc.args, " "), stdout, subCmd.Long)
 		case err == nil && !tc.generatesError:
 			for _, str := range tc.outStr {
-				stub.AssertLineCompare(t, stdout, str, 0)
+				common.AssertLineCompare(t, stdout, str, 0)
 			}
 		}
 
@@ -85,12 +87,12 @@ metadata:
     url: https://foo.com
   name: model-1
   tags:
-  - foo:&{bar MetadataStringValue}
+  - foo-bar
 spec:
   dependsOn:
   - resource:v1
   - api:model-1-v1-artifact
-  lifecycle: lifecycle
+  lifecycle: Lifecycle
   owner: user:kube:admin
   profile:
     displayName: model-1
@@ -111,7 +113,7 @@ metadata:
 spec:
   dependencyOf:
   - component:model-1
-  lifecycle: lifecycle
+  lifecycle: Lifecycle
   owner: user:kube:admin
   profile:
     displayName: v1
@@ -128,7 +130,7 @@ spec:
   definition: no-definition-yet
   dependencyOf:
   - component:model-1
-  lifecycle: lifecycle
+  lifecycle: Lifecycle
   owner: user:kube:admin
   profile:
     displayName: model-1

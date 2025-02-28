@@ -5,7 +5,8 @@ import (
 	serverapiv1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 	fakeservingv1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/fake"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub"
+	cobra2 "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/cobra"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"knative.dev/pkg/apis"
@@ -293,7 +294,7 @@ func TestNewCmd(t *testing.T) {
 		cfg := &config.Config{}
 		setupConfig(cfg, tc.is)
 		cmd := NewCmd(cfg)
-		subCmd, stdout, stderr, err := stub.ExecuteCommandC(cmd, tc.args...)
+		subCmd, stdout, stderr, err := cobra2.ExecuteCommandC(cmd, tc.args...)
 		switch {
 		case err == nil && tc.generatesError:
 			t.Errorf("error should have been generated for '%s'", strings.Join(tc.args, " "))
@@ -305,10 +306,10 @@ func TestNewCmd(t *testing.T) {
 			t.Errorf("unexpected help output for '%s' - got '%s' but expected '%s'", strings.Join(tc.args, " "), stdout, subCmd.Long)
 		case err == nil && !tc.generatesError:
 			if len(tc.outStr) == 1 {
-				stub.AssertLineCompare(t, stdout, tc.outStr[0], 0)
+				common.AssertLineCompare(t, stdout, tc.outStr[0], 0)
 				continue
 			}
-			stub.AssertContains(t, stdout, tc.outStr)
+			common.AssertContains(t, stdout, tc.outStr)
 		}
 	}
 

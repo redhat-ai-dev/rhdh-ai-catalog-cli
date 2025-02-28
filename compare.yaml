@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-http-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-http-app
+  template:
+    metadata:
+      labels:
+        app: simple-http-app
+    spec:
+      containers:
+        - name: simple-http
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html
+              name: web-content
+      securityContext:
+        runAsUser: 0
+      volumes:
+        - name: web-content
+          configMap:
+            name: simple-http-content
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simple-http-content
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <h1>Hello World!</h1>
+    </body>
+    </html>
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-http-service
+spec:
+  selector:
+    app: simple-http-app
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: simple-http-route
+spec:
+  to:
+    kind: Service
+    name: simple-http-service
+

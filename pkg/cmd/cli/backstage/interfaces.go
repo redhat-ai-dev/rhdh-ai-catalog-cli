@@ -2,7 +2,7 @@ package backstage
 
 import (
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
-	"github.com/spf13/cobra"
+	"io"
 	"k8s.io/klog/v2"
 	"strings"
 )
@@ -35,7 +35,7 @@ type APIPopulator interface {
 	GetDependencyOf() []string
 }
 
-func PrintComponent(pop ComponentPopulator, cmd *cobra.Command) error {
+func PrintComponent(pop ComponentPopulator, writer io.Writer) error {
 	component := &ComponentEntityV1alpha1{
 		Kind:       "Component",
 		ApiVersion: VERSION,
@@ -51,7 +51,7 @@ func PrintComponent(pop ComponentPopulator, cmd *cobra.Command) error {
 		DependsOn:    pop.GetDependsOn(),
 		Profile:      Profile{DisplayName: pop.GetDisplayName()},
 	}
-	err := util.PrintYaml(component, true, cmd)
+	err := util.PrintYaml(component, true, writer)
 	if err != nil {
 		klog.Errorf("ERROR: converting component to yaml and printing: %s, %#v", err.Error(), component)
 		return err
@@ -59,7 +59,7 @@ func PrintComponent(pop ComponentPopulator, cmd *cobra.Command) error {
 	return nil
 }
 
-func PrintResource(pop ResourcePopulator, cmd *cobra.Command) error {
+func PrintResource(pop ResourcePopulator, writer io.Writer) error {
 	resource := &ResourceEntityV1alpha1{
 		Kind:       "Resource",
 		ApiVersion: VERSION,
@@ -75,7 +75,7 @@ func PrintResource(pop ResourcePopulator, cmd *cobra.Command) error {
 		DependencyOf: pop.GetDependencyOf(),
 		Profile:      Profile{DisplayName: pop.GetDisplayName()},
 	}
-	err := util.PrintYaml(resource, true, cmd)
+	err := util.PrintYaml(resource, true, writer)
 	if err != nil {
 		klog.Errorf("ERROR: converting resource to yaml and printing: %s, %#v", err.Error(), resource)
 		return err
@@ -83,7 +83,7 @@ func PrintResource(pop ResourcePopulator, cmd *cobra.Command) error {
 	return nil
 }
 
-func PrintAPI(pop APIPopulator, cmd *cobra.Command) error {
+func PrintAPI(pop APIPopulator, writer io.Writer) error {
 	api := &ApiEntityV1alpha1{
 		Kind:       "API",
 		ApiVersion: VERSION,
@@ -114,7 +114,7 @@ func PrintAPI(pop APIPopulator, cmd *cobra.Command) error {
 		api.Spec.Type = UNKNOWN_API_TYPE
 	}
 
-	err := util.PrintYaml(api, false, cmd)
+	err := util.PrintYaml(api, false, writer)
 	if err != nil {
 		klog.Errorf("ERROR: converting api to yaml and printing: %s, %#v", err.Error(), api)
 		return err

@@ -2,6 +2,7 @@ package backstage
 
 import (
 	"fmt"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 	"net/url"
 	"sort"
 	"strings"
@@ -12,9 +13,9 @@ func buildKeys(args ...string) map[string][]string {
 	for _, arg := range args {
 		array := strings.Split(arg, ":")
 		if len(array) == 1 {
-			arr := keys[DEFAULT_NS]
+			arr := keys[rest.DEFAULT_NS]
 			arr = append(arr, arg)
-			keys[DEFAULT_NS] = arr
+			keys[rest.DEFAULT_NS] = arr
 			continue
 		}
 		arr := keys[array[0]]

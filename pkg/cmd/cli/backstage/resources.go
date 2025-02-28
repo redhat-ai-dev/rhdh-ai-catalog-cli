@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/rest"
 )
 
 type listResources struct {
@@ -14,7 +15,7 @@ type listResources struct {
 
 func (b *BackstageRESTClientWrapper) ListResources(args ...string) (string, error) {
 	qparms := updateQParams("resource", RESOURCE_TYPE, args)
-	str, err := b.getWithKindParamFromBackstage(b.RootURL+QUERY_URI, qparms)
+	str, err := b.getWithKindParamFromBackstage(b.RootURL+rest.QUERY_URI, qparms)
 	if err != nil {
 		return "", err
 	}
@@ -55,7 +56,7 @@ func (b *BackstageRESTClientWrapper) GetResource(args ...string) (string, error)
 	buffer := &bytes.Buffer{}
 	for namespace, names := range keys {
 		for _, name := range names {
-			str, err := b.getFromBackstage(b.RootURL + fmt.Sprintf(RESOURCE_URI, namespace, name))
+			str, err := b.getFromBackstage(b.RootURL + fmt.Sprintf(rest.RESOURCE_URI, namespace, name))
 			if err != nil {
 				return buffer.String(), err
 			}

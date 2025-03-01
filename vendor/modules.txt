@@ -366,8 +366,8 @@ github.com/kserve/kserve/pkg/constants
 github.com/kserve/kserve/pkg/credentials/gcs
 github.com/kserve/kserve/pkg/credentials/s3
 github.com/kserve/kserve/pkg/utils
-# github.com/kubeflow/model-registry v0.2.11
-## explicit; go 1.21
+# github.com/kubeflow/model-registry v0.2.14
+## explicit; go 1.22
 github.com/kubeflow/model-registry/pkg/openapi
 # github.com/leodido/go-urn v1.4.0
 ## explicit; go 1.18
@@ -569,7 +569,7 @@ go.uber.org/zap/zapcore
 # golang.org/x/arch v0.8.0
 ## explicit; go 1.18
 golang.org/x/arch/x86/x86asm
-# golang.org/x/crypto v0.31.0
+# golang.org/x/crypto v0.32.0
 ## explicit; go 1.20
 golang.org/x/crypto/chacha20
 golang.org/x/crypto/chacha20poly1305
@@ -582,7 +582,7 @@ golang.org/x/crypto/sha3
 # golang.org/x/exp v0.0.0-20240823005443-9b4947da3948
 ## explicit; go 1.20
 golang.org/x/exp/maps
-# golang.org/x/net v0.33.0
+# golang.org/x/net v0.34.0
 ## explicit; go 1.18
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -613,14 +613,14 @@ golang.org/x/oauth2/jwt
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.28.0
+# golang.org/x/sys v0.29.0
 ## explicit; go 1.18
 golang.org/x/sys/cpu
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/term v0.27.0
+# golang.org/x/term v0.28.0
 ## explicit; go 1.18
 golang.org/x/term
 # golang.org/x/text v0.21.0

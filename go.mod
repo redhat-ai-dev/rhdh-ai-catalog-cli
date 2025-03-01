@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/kserve/kserve v0.14.1
 	github.com/kubeflow/model-registry v0.2.11
-	github.com/openshift/api v0.0.0-20250102185430-d6d8306a24ec
+	github.com/openshift/api 635291d6fdf1
 	github.com/openshift/client-go v0.0.0-20241217083110-35abaf51555b
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5

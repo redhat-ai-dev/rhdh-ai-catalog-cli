@@ -12,7 +12,7 @@ require (
 	github.com/openshift/api v0.0.0-20250102185430-d6d8306a24ec
 	github.com/openshift/client-go v0.0.0-20241217083110-35abaf51555b
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6
 	k8s.io/api v0.31.4
 	k8s.io/apiextensions-apiserver v0.31.0
 	k8s.io/apimachinery v0.31.4

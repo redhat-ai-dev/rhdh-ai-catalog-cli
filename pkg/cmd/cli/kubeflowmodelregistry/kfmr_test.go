@@ -1,10 +1,10 @@
 package kubeflowmodelregistry
 
 import (
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
-	cobra2 "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/cobra"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/common"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/stub/kfmr"
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
+	cobra2 "github.com/redhat-ai-dev/model-catalog-bridge/test/cobra"
+	"github.com/redhat-ai-dev/model-catalog-bridge/test/stub/common"
+	"github.com/redhat-ai-dev/model-catalog-bridge/test/stub/kfmr"
 	"github.com/spf13/cobra"
 	"strings"
 	"testing"

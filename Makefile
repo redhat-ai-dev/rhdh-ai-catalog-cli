@@ -22,9 +22,6 @@ ARGS ?=
 .PHONY: $(BIN)
 $(BIN):
 	go build $(GO_FLAGS) -o $(BIN) $(CMD)
-	go build $(GO_FLAGS) -o _output/location ./cmd/location/...
-	go build $(GO_FLAGS) -o _output/rhoai-normalizer ./cmd/rhoai-normalizer/...
-	go build $(GO_FLAGS) -o _output/storage-rest ./cmd/storage-rest/...
 
 build: $(BIN)
 

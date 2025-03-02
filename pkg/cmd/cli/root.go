@@ -2,12 +2,12 @@ package cli
 
 import (
 	"context"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/backstage"
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/backstage"
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/server/location/client"
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/server/location/client"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/config"
-	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 	"net/url"

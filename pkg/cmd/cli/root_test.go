@@ -1,7 +1,7 @@
 package cli
 
 import (
-	cobra2 "github.com/redhat-ai-dev/rhdh-ai-catalog-cli/test/cobra"
+	cobra2 "github.com/redhat-ai-dev/model-catalog-bridge/test/cobra"
 	"github.com/spf13/cobra"
 	"strings"
 	"testing"

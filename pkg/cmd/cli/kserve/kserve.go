@@ -7,7 +7,7 @@ import (
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
 	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,16 +33,6 @@ $ %s new-model kserve <Owner> <Lifecycle> --kubeconfig=/home/myid/my-kube.json
 # in the 'my-datascience-project'namespace in order to build Catalog Component, Resource, and API Entities.
 $ %s new-model kserve Owner Lifecycle inferenceservice1 inferenceservice2 --namespace my-datascience-project
 `
-	sklearn     = "sklearn"
-	xgboost     = "xgboost"
-	tensorflow  = "tensorflow"
-	pytorch     = "pytorch"
-	triton      = "triton"
-	onnx        = "onnx"
-	huggingface = "huggingface"
-	pmml        = "pmml"
-	lightgbm    = "lightgbm"
-	paddle      = "paddle"
 )
 
 type CommonPopulator struct {

@@ -5,9 +5,10 @@ import (
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/backstage"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/server/location/client"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
+	brdgutil "github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kserve"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/cmd/cli/kubeflowmodelregistry"
+	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 	"net/url"
@@ -171,7 +172,7 @@ func NewCmd() *cobra.Command {
 	cfg.StoreURL = os.Getenv("MODEL_METADATA_URL")
 	cfg.StoreToken = os.Getenv("MODEL_METADATA_TOKEN")
 	cfg.StoreSkipTLS, _ = strconv.ParseBool(os.Getenv("METADATA_MODEL_SKIP_TLS"))
-	cfg.Namespace = util.GetCurrentProject()
+	cfg.Namespace = brdgutil.GetCurrentProject()
 
 	bkstgAI.PersistentFlags().StringVar(&(cfg.Kubeconfig), "kubeconfig", cfg.Kubeconfig,
 		"Path to the kubeconfig file to use for CLI requests.")
@@ -221,7 +222,7 @@ func NewCmd() *cobra.Command {
 			if len(args) == 0 {
 				klog.Error("ERROR: delete-model requires a location ID")
 			}
-			util.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).DeleteLocation(args[0]))
+			brdgutil.ProcessOutput(backstage.SetupBackstageRESTClient(cfg).DeleteLocation(args[0]))
 		},
 	}
 	importModel := &cobra.Command{
@@ -248,9 +249,9 @@ func NewCmd() *cobra.Command {
 				bkstgREST := backstage.SetupBackstageRESTClient(cfg)
 				retJSON, err := bkstgREST.ImportLocation(args[0])
 				if err != nil {
-					util.ProcessOutput("", err)
+					brdgutil.ProcessOutput("", err)
 				}
-				util.ProcessOutput(bkstgREST.PrintImportLocation(retJSON))
+				brdgutil.ProcessOutput(bkstgREST.PrintImportLocation(retJSON))
 				return
 			default:
 				klog.Errorf("ERROR: import-model only supports http and https prototype scheme URLs")
@@ -339,7 +340,7 @@ func NewCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			str, err := backstage.SetupBackstageRESTClient(cfg).ListEntities()
-			util.ProcessOutput(str, err)
+			brdgutil.ProcessOutput(str, err)
 			return err
 
 		},
@@ -352,7 +353,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getLocationsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetLocation(args...)
-			util.ProcessOutput(str, err)
+			brdgutil.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -364,7 +365,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getComponentsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetComponent(args...)
-			util.ProcessOutput(str, err)
+			brdgutil.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -376,7 +377,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getResourcesExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetResource(args...)
-			util.ProcessOutput(str, err)
+			brdgutil.ProcessOutput(str, err)
 			return err
 		},
 	})
@@ -388,7 +389,7 @@ func NewCmd() *cobra.Command {
 		Example: strings.ReplaceAll(getApisExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			str, err := backstage.SetupBackstageRESTClient(cfg).GetAPI(args...)
-			util.ProcessOutput(str, err)
+			brdgutil.ProcessOutput(str, err)
 			return err
 		},
 	})

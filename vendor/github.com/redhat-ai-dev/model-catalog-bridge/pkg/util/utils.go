@@ -11,8 +11,6 @@ import (
 	"syscall"
 )
 
-const ApplicationName = "bac"
-
 func PrintYaml(obj interface{}, addDivider bool, w io.Writer) error {
 	writer := printers.GetNewTabWriter(w)
 	output, err := yaml.Marshal(obj)

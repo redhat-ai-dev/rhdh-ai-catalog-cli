@@ -74,7 +74,13 @@ func tagsMatch(args, tags []string) bool {
 
 func updateQParams(kind, specType string, args []string) *url.Values {
 	// example 'filter' value from swagger doc:  'kind=component,metadata.annotations.backstage.io/orphan=true'
+	// NOTE: while our AI model catalog proscribes specific types for Component and Resource, for API, there are a
+	// set of predefined types related to the format of the API (openapi, grpc, etc.) so we have no means currently
+	// of using spec.type to distinguish our AI model catalog API items like we do for Component and Resource.
 	filterValue := fmt.Sprintf("kind=%s,spec.type=%s", kind, specType)
+	if strings.EqualFold(kind, "api") {
+		filterValue = fmt.Sprintf("kind=%s", kind)
+	}
 	qparams := &url.Values{
 		"filter": []string{filterValue},
 	}

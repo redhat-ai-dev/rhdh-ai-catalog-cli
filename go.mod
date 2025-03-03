@@ -5,7 +5,7 @@ go 1.22.9
 require (
 	github.com/kserve/kserve v0.14.1
 	github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250303170413-9d88510b8a55
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4

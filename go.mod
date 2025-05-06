@@ -6,7 +6,7 @@ require (
 	github.com/kserve/kserve v0.14.1
 	github.com/kubeflow/model-registry v0.2.11
 	github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250506193434-d5d32f58f301
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4

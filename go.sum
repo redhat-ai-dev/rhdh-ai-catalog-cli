@@ -255,8 +255,8 @@ github.com/prometheus/procfs v0.15.1 h1:YagwOFzUgYfKKHX6Dr+sHT7km/hxC76UB0leargg
 github.com/prometheus/procfs v0.15.1/go.mod h1:fB45yRUv8NstnjriLhBQLuOUt+WW4BsoGhij/e3PBqk=
 github.com/prometheus/statsd_exporter v0.27.1 h1:tcRJOmwlA83HPfWzosAgr2+zEN5XDFv+M2mn/uYkn5Y=
 github.com/prometheus/statsd_exporter v0.27.1/go.mod h1:vA6ryDfsN7py/3JApEst6nLTJboq66XsNcJGNmC88NQ=
-github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250303170413-9d88510b8a55 h1:HjPeyHxn5DnOcEn6ot2yNn8W8hoTD1f88/fWIVRn6/E=
-github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250303170413-9d88510b8a55/go.mod h1:KycSxf/C0lna9isLswQht1i5lEo5IUj8m4qpQ+Tx+8U=
+github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250506193434-d5d32f58f301 h1:H/c/rfMbuN5U7Y25gewK00Np6m0tfsKu28ThAWE/1Cc=
+github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250506193434-d5d32f58f301/go.mod h1:KycSxf/C0lna9isLswQht1i5lEo5IUj8m4qpQ+Tx+8U=
 github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/russross/blackfriday/v2 v2.1.0 h1:JIOH55/0cWyOuilr9/qlrm0BSXldqnqwMsf35Ld67mk=

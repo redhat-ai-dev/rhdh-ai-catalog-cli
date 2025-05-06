@@ -1,14 +1,25 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-	"k8s.io/cli-runtime/pkg/printers"
-	"k8s.io/klog/v2"
 	"os"
 	"os/signal"
-	"sigs.k8s.io/yaml"
+	"regexp"
+	"strings"
 	"syscall"
+
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/types"
+	"k8s.io/cli-runtime/pkg/printers"
+	"k8s.io/klog/v2"
+	"sigs.k8s.io/yaml"
+)
+
+const (
+	NameInvalidCharRegexp = `[^a-zA-Z0-9\-_]`
+
+	NameNoDuplicateSpecialCharRegexp = `[-_.]{2,}`
 )
 
 func PrintYaml(obj interface{}, addDivider bool, w io.Writer) error {
@@ -21,6 +32,15 @@ func PrintYaml(obj interface{}, addDivider bool, w io.Writer) error {
 	if addDivider {
 		fmt.Fprintln(w, "---")
 	}
+	return err
+}
+
+func PrintJSON(obj interface{}, w io.Writer) error {
+	output, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(output)
 	return err
 }
 
@@ -57,6 +77,56 @@ func ProcessOutput(str string, err error) {
 	}
 }
 
-func BuildImportKeyAndURI(seg1, seg2 string) (string, string) {
-	return fmt.Sprintf("%s_%s", seg1, seg2), fmt.Sprintf("/%s/%s/catalog-info.yaml", seg1, seg2)
+func BuildImportKeyAndURI(seg1, seg2 string, format types.NormalizerFormat) (string, string) {
+	// no spaces in keys
+	seg1 = strings.ReplaceAll(seg1, " ", "")
+	seg2 = strings.ReplaceAll(seg2, " ", "")
+	fn := "catalog-info.yaml"
+	if format == types.JsonArrayForamt {
+		fn = "model-catalog.json"
+	}
+	return fmt.Sprintf("%s_%s", seg1, seg2), fmt.Sprintf("/%s/%s/%s", seg1, seg2, fn)
+}
+
+func SanitizeModelVersion(mv string) string {
+	replacer := strings.NewReplacer(" ", "-")
+	mv = strings.ToLower(mv)
+	mv = replacer.Replace(mv)
+	return strings.ToLower(SanitizeName(mv))
+}
+func SanitizeName(name string) string {
+	sanitizedName := name
+
+	// Replace any invalid characters with an empty character
+	validChars := regexp.MustCompile(NameInvalidCharRegexp)
+	sanitizedName = validChars.ReplaceAllString(sanitizedName, "")
+
+	// Remove duplicated special characters
+	noDupeChars := regexp.MustCompile(NameNoDuplicateSpecialCharRegexp)
+	sanitizedName = noDupeChars.ReplaceAllString(sanitizedName, "")
+
+	// Trim to no more than 63 characters
+	if len(sanitizedName) > 63 {
+		sanitizedName = sanitizedName[:63]
+	}
+
+	// Finally, ensure only alphanumeric characters at beginning and end of the name
+	sanitizedName = strings.Trim(sanitizedName, "-_.")
+	return sanitizedName
+
+}
+
+func KServeInferenceServiceMapping(rName, mName, isName string) bool {
+	// we have to special case the names a bit before sanitzing when mapping to the inference service name to match
+	// what kubeflow / kserve does; our sanitize already converts dots to empty chars, but we also need to a) convert
+	// spaces to hyphens, and b) make everything lower case
+	replacer := strings.NewReplacer(" ", "-")
+	rName = strings.ToLower(rName)
+	rName = replacer.Replace(rName)
+	rName = SanitizeName(rName)
+	mName = strings.ToLower(mName)
+	mName = replacer.Replace(mName)
+	mName = SanitizeName(mName)
+	key := fmt.Sprintf("%s-%s", rName, mName)
+	return key == isName
 }

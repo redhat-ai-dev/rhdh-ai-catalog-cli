@@ -373,7 +373,7 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250303170413-9d88510b8a55
+# github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250506193434-d5d32f58f301
 ## explicit; go 1.22.9
 github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/backstage
 github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kserve
@@ -381,7 +381,9 @@ github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kubeflowmodelregistry
 github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/server/location/client
 github.com/redhat-ai-dev/model-catalog-bridge/pkg/config
 github.com/redhat-ai-dev/model-catalog-bridge/pkg/rest
+github.com/redhat-ai-dev/model-catalog-bridge/pkg/types
 github.com/redhat-ai-dev/model-catalog-bridge/pkg/util
+github.com/redhat-ai-dev/model-catalog-bridge/schema/types/golang
 github.com/redhat-ai-dev/model-catalog-bridge/test/cobra
 github.com/redhat-ai-dev/model-catalog-bridge/test/stub/common
 github.com/redhat-ai-dev/model-catalog-bridge/test/stub/kfmr

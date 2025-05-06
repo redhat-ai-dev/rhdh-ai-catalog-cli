@@ -1,11 +1,75 @@
 package backstage
 
+// model catalog json schema populators
+
 import (
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
 	"io"
-	"k8s.io/klog/v2"
 	"strings"
+
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
+	"github.com/redhat-ai-dev/model-catalog-bridge/schema/types/golang"
+	"k8s.io/klog/v2"
 )
+
+type ModelCatalogPopulator interface {
+	GetModels() []golang.Model
+	GetModelServer() *golang.ModelServer
+}
+
+type CommonModelSchemaPopulator interface {
+	GetName() string
+	GetOwner() string
+	GetLifecyle() string
+	GetDescription() string
+	GetTags() []string
+}
+
+type ModelServerPopulator interface {
+	CommonModelSchemaPopulator
+
+	GetAPI() *golang.API
+	GetAuthentication() *bool
+	GetHomepageURL() *string
+	GetUsage() *string
+}
+
+type ModelPopulator interface {
+	CommonModelSchemaPopulator
+
+	GetArtifactLocationURL() *string
+	GetEthics() *string
+	GetHowToUseURL() *string
+	GetSupport() *string
+	GetTraining() *string
+	GetUsage() *string
+	GetTechDocs() *string
+}
+
+type ModelServerAPIPopulator interface {
+	GetSpec() string
+	GetTags() []string
+	GetType() golang.Type
+	GetURL() string
+}
+
+func PrintModelCatalogPopulator(svrPop ModelCatalogPopulator, writer io.Writer) error {
+	modelCatalog := &golang.ModelCatalog{
+		Models: svrPop.GetModels(),
+	}
+	ms := svrPop.GetModelServer()
+	// only add the model server if it has an inference endpoint URL
+	if ms != nil && ms.API != nil && len(ms.API.URL) > 0 {
+		modelCatalog.ModelServer = ms
+	}
+	err := util.PrintJSON(modelCatalog, writer)
+	if err != nil {
+		klog.Errorf("ERROR: converting ModelCatalog to yaml and printing: %s, %#v", err.Error(), modelCatalog)
+		return err
+	}
+	return nil
+}
+
+// catalog-info.yaml populators
 
 type CommonPopulator interface {
 	GetOwner() string

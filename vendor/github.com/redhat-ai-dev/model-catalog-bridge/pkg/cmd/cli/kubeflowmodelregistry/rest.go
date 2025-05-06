@@ -45,10 +45,6 @@ func SetupKubeflowRESTClient(cfg *config.Config) *KubeFlowRESTClientWrapper {
 	}
 	kubeFlowRESTClient.RESTClient.SetTLSClientConfig(tlsCfg)
 
-	//TODO unless https://issues.redhat.com/browse/RHOAIENG-16898 gets processed such that KFMR
-	// starts adding the KServer inferenceservice.status.url in the inference_service / serving_environment
-	// object, we need to take the names from those two items as the name and namespace for a KServe client lookup.
-	// Hence we have to set up the KServe serving client
 	kserve.SetupKServeClient(cfg)
 	kubeFlowRESTClient.Config = cfg
 

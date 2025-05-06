@@ -15,6 +15,8 @@ const (
 
 type BackstageImport interface {
 	ImportLocation(url string) (map[string]any, error)
+	DeleteLocation(id string) (string, error)
+	GetLocation(id string) (map[string]any, error)
 }
 
 func ParseImportLocationMap(retJSON map[string]any) (id string, target string, ok bool) {

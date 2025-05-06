@@ -60,3 +60,10 @@ func AssertEqual(t *testing.T, e, g interface{}) (r bool) {
 
 	return
 }
+
+func AssertNotNil(t *testing.T, g interface{}) {
+	t.Helper()
+	if g == nil {
+		t.Errorf("got unexpected nil")
+	}
+}

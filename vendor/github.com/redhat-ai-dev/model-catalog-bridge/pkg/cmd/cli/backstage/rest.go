@@ -2,14 +2,13 @@ package backstage
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/rest"
-	"github.com/redhat-ai-dev/model-catalog-bridge/test/stub/common"
 	"k8s.io/klog/v2"
-	"net/http/httptest"
 	nurl "net/url"
 	"os"
 )
@@ -41,6 +40,20 @@ func SetupBackstageRESTClient(cfg *config.Config) *BackstageRESTClientWrapper {
 	if cfg.BackstageSkipTLS {
 		tlsCfg.InsecureSkipVerify = true
 	}
+
+	//TODO when run as separate pod also check the ca.crt in the default location
+	certs, err := os.ReadFile("/opt/app-root/src/dynamic-plugins-root/ca.crt")
+	if err == nil {
+		rootCAs, _ := x509.SystemCertPool()
+		if rootCAs == nil {
+			rootCAs = x509.NewCertPool()
+		}
+		rootCAs.AppendCertsFromPEM(certs)
+		tlsCfg.RootCAs = rootCAs
+		tlsCfg.InsecureSkipVerify = false
+		klog.Infof("accessing backstage with TLS")
+	}
+
 	backstageRESTClient.RESTClient.SetTLSClientConfig(tlsCfg)
 	backstageRESTClient.Token = cfg.BackstageToken
 	backstageRESTClient.RootURL = cfg.BackstageURL + rest.BASE_URI
@@ -137,11 +150,4 @@ func (k *BackstageRESTClientWrapper) deleteFromBackstage(url string) (string, er
 		return "", err
 	}
 	return k.processDelete(resp, url, "delete")
-}
-
-func SetupBackstageTestRESTClient(ts *httptest.Server) *BackstageRESTClientWrapper {
-	backstageTestRESTClient := &BackstageRESTClientWrapper{}
-	backstageTestRESTClient.RESTClient = common.DC()
-	backstageTestRESTClient.RootURL = ts.URL
-	return backstageTestRESTClient
 }

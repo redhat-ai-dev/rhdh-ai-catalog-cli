@@ -4,7 +4,8 @@ go 1.22.9
 
 require (
 	github.com/kserve/kserve v0.14.1
-	github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250303170413-9d88510b8a55
+	github.com/kubeflow/model-registry v0.2.11
+	github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20250506193434-d5d32f58f301
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.6
 	k8s.io/apimachinery v0.31.4
@@ -65,7 +66,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
-	github.com/kubeflow/model-registry v0.2.11 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

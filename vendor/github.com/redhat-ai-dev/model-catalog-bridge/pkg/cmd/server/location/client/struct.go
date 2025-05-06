@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+// TODO this entire bit of the POC most likely can be removed, and then revendor / client up the CLI repo
 type Artifacts struct {
 	ctx      context.Context
 	cfg      *config.Config

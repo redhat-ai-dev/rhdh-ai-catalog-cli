@@ -2,8 +2,11 @@ package kubeflowmodelregistry
 
 import (
 	"fmt"
+	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kubeflowmodelregistry"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/types"
+	butil "github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
@@ -54,7 +57,33 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 
 			kfmr := kubeflowmodelregistry.SetupKubeflowRESTClient(cfg)
 
-			_, _, err := kubeflowmodelregistry.LoopOverKFMR(owner, lifecycle, ids, cmd.OutOrStdout(), kfmr, nil)
+			// _, _, err := kubeflowmodelregistry.LoopOverKFMR(owner, lifecycle, ids, cmd.OutOrStdout(), kfmr, nil)
+			rms, mvs, mas, err := kubeflowmodelregistry.LoopOverKFMR(ids, kfmr)
+			if err != nil {
+				klog.Errorf("%s", err.Error())
+				klog.Flush()
+				return err
+			}
+			var isl []openapi.InferenceService
+			isl, err = kfmr.ListInferenceServices()
+			if err != nil {
+				klog.Errorf("%s", err.Error())
+				klog.Flush()
+				return err
+			}
+			for _, rm := range rms {
+				mva, ok := mvs[butil.SanitizeName(rm.Name)]
+				if !ok {
+					klog.Errorf("could not find the model versions for registered model %s with sanitized name %s", rm.Name, butil.SanitizeName(rm.Name))
+					continue
+				}
+				maa, ok2 := mas[butil.SanitizeName(rm.Name)]
+				if !ok2 {
+					klog.Errorf("could not find the model artifact array for registered model %s with santizied name %s", rm.Name, butil.SanitizeName(rm.Name))
+					continue
+				}
+				err = kubeflowmodelregistry.CallBackstagePrinters(cmd.Context(), owner, lifecycle, &rm, mva, maa, isl, nil, kfmr, nil, cmd.OutOrStdout(), types.CatalogInfoYamlFormat)
+			}
 			return err
 
 		},

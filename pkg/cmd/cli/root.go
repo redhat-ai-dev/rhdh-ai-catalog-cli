@@ -352,7 +352,7 @@ func NewCmd() *cobra.Command {
 		Aliases: []string{"l", "location"},
 		Example: strings.ReplaceAll(getLocationsExample, "%s", util.ApplicationName),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			str, err := backstage.SetupBackstageRESTClient(cfg).GetLocation(args...)
+			str, err := backstage.SetupBackstageRESTClient(cfg).GetLocations(args...)
 			brdgutil.ProcessOutput(str, err)
 			return err
 		},

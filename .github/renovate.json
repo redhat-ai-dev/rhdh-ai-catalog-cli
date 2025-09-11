@@ -17,5 +17,6 @@
     },
     "osvVulnerabilityAlerts": true,
     "prHourlyLimit": 10,
-    "prConcurrentLimit": 10
+    "prConcurrentLimit": 10,
+    "labels": ["renovatebot"]
   }

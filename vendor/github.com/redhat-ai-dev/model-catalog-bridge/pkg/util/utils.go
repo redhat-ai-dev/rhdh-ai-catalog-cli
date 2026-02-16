@@ -10,7 +10,11 @@ import (
 	"strings"
 	"syscall"
 
+	serverapiv1beta1 "github.com/kserve/kserve/pkg/apis/serving/v1beta1"
+
+	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/rest"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/types"
+
 	"k8s.io/cli-runtime/pkg/printers"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/yaml"
@@ -116,17 +120,28 @@ func SanitizeName(name string) string {
 
 }
 
-func KServeInferenceServiceMapping(rName, mName, isName string) bool {
-	// we have to special case the names a bit before sanitzing when mapping to the inference service name to match
-	// what kubeflow / kserve does; our sanitize already converts dots to empty chars, but we also need to a) convert
-	// spaces to hyphens, and b) make everything lower case
-	replacer := strings.NewReplacer(" ", "-")
-	rName = strings.ToLower(rName)
-	rName = replacer.Replace(rName)
-	rName = SanitizeName(rName)
-	mName = strings.ToLower(mName)
-	mName = replacer.Replace(mName)
-	mName = SanitizeName(mName)
-	key := fmt.Sprintf("%s-%s", rName, mName)
-	return key == isName
+func KServeInferenceServiceMapping(rId, mId string, is *serverapiv1beta1.InferenceService) bool {
+	if is.Labels == nil {
+		return false
+	}
+
+	rmVal, rok := is.Labels[rest.INF_SVC_RM_ID_LABEL]
+	if !rok {
+		return false
+	}
+
+	if strings.TrimSpace(rId) != strings.TrimSpace(rmVal) {
+		return false
+	}
+
+    mvVal, mok := is.Labels[rest.INF_SVC_MV_ID_LABEL]
+    if !mok {
+         return false
+    }
+
+    if strings.TrimSpace(mId) != strings.TrimSpace(mvVal) {
+         return false
+    }
+
+    return true
 }

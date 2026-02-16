@@ -17,6 +17,25 @@ func SetupKubeflowTestRESTClient(ts *httptest.Server, cfg *config.Config) {
 	cfg.KubeflowRESTClient = common.DC()
 }
 
+func CreateEmptyGetServer(t *testing.T) *httptest.Server {
+	ts := common.CreateTestServer(func(w http.ResponseWriter, r *http.Request) {
+		t.Logf("Method: %v", r.Method)
+		t.Logf("Path: %v", r.URL.Path)
+
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case common.MethodGet:
+			switch {
+			case strings.HasSuffix(r.URL.Path, rest.LIST_REG_MODEL_URI):
+				_, _ = w.Write([]byte(common.TestJSONStringEmptyRegisteredModelOneLine))
+
+			}
+		}
+	})
+
+	return ts
+}
+
 func CreateGetServer(t *testing.T) *httptest.Server {
 	ts := common.CreateTestServer(func(w http.ResponseWriter, r *http.Request) {
 		t.Logf("Method: %v", r.Method)
@@ -50,6 +69,8 @@ func CreateGetServerWithInference(t *testing.T) *httptest.Server {
 		switch r.Method {
 		case common.MethodGet:
 			switch {
+            case strings.Contains(r.URL.Path, rest.KRMR_CATALOG_BASE_URI):
+                 _, _ = w.Write([]byte(common.GraniteCatalogModelGet))
 			case strings.HasSuffix(r.URL.Path, rest.LIST_REG_MODEL_URI):
 				_, _ = w.Write([]byte(common.MnistRegisteredModels))
 			case strings.HasSuffix(r.URL.Path, fmt.Sprintf("%s/%s", rest.LIST_REG_MODEL_URI, "1")):

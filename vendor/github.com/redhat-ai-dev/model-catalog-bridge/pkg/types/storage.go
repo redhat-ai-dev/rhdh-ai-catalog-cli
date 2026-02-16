@@ -1,6 +1,8 @@
 package types
 
-import "k8s.io/client-go/rest"
+import (
+     "k8s.io/client-go/rest"
+)
 
 type BridgeStorage interface {
 	Initialize(cfg *rest.Config) error
@@ -11,10 +13,12 @@ type BridgeStorage interface {
 }
 
 type StorageBody struct {
-	Body            []byte `json:"body"`
-	LocationId      string `json:"locationId"`
-	LocationTarget  string `json:"locationTarget"`
-	LocationIDValid bool   `json:"locationIDValid"`
+	Body                     []byte `json:"body"`
+	LocationId               string `json:"locationId"`
+	LocationTarget           string `json:"locationTarget"`
+	LocationIDValid          bool   `json:"locationIDValid"`
+	ReconcilerType           string `json:"reconcilerType"`
+	LastUpdateTimeSinceEpoch string `json:"lastUpdateTimeSinceEpoch"`
 }
 
 type BridgeStorageType string

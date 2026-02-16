@@ -2,6 +2,8 @@ package kubeflowmodelregistry
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/kubeflow/model-registry/pkg/openapi"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kubeflowmodelregistry"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
@@ -10,7 +12,6 @@ import (
 	"github.com/redhat-ai-dev/rhdh-ai-catalog-cli/pkg/util"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
-	"strings"
 )
 
 const (
@@ -82,7 +83,11 @@ func NewCmd(cfg *config.Config) *cobra.Command {
 					klog.Errorf("could not find the model artifact array for registered model %s with santizied name %s", rm.Name, butil.SanitizeName(rm.Name))
 					continue
 				}
-				err = kubeflowmodelregistry.CallBackstagePrinters(cmd.Context(), owner, lifecycle, &rm, mva, maa, isl, nil, kfmr, nil, cmd.OutOrStdout(), types.CatalogInfoYamlFormat)
+				for _, mv := range mva {
+					for _, i := range isl {
+						err = kubeflowmodelregistry.CallBackstagePrinters(cmd.Context(), owner, lifecycle, &rm, &mv, maa[mv.GetId()], &i, nil, kfmr, nil, cmd.OutOrStdout(), types.CatalogInfoYamlFormat)
+					}
+				}
 			}
 			return err
 

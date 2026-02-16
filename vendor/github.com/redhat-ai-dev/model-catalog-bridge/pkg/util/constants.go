@@ -5,9 +5,12 @@ const (
 	DefaultLifecycle     = "development"
 	StorageConfigMapName = "bac-import-model"
 	KeyQueryParam        = "key"
+	TypeQueryParam       = "type"
 	UpsertURI            = "/upsert"
 	CurrentKeySetURI     = "/currentkeyset"
 	RemoveURI            = "/remove"
 	ListURI              = "/list"
 	FetchURI             = "/fetch"
+	ModelCardURI         = "/modelcard"
+
 )

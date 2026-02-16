@@ -25,9 +25,6 @@ type ModelArtifact struct {
 	Description *string `json:"description,omitempty"`
 	// The external id that come from the clients’ system. This field is optional. If set, it must be unique among all resources within a database instance.
 	ExternalId *string `json:"externalId,omitempty"`
-	// The uniform resource identifier of the physical artifact. May be empty if there is no physical artifact.
-	Uri   *string        `json:"uri,omitempty"`
-	State *ArtifactState `json:"state,omitempty"`
 	// The client provided name of the artifact. This field is optional. If set, it must be unique among all the artifacts of the same artifact type within a database instance and cannot be changed once set.
 	Name *string `json:"name,omitempty"`
 	// The unique server generated id of the resource.
@@ -47,6 +44,19 @@ type ModelArtifact struct {
 	ModelFormatVersion *string `json:"modelFormatVersion,omitempty"`
 	// Name of the service account with storage secret.
 	ServiceAccountName *string `json:"serviceAccountName,omitempty"`
+	// A string identifier describing the source kind. It differentiates various sources of model artifacts. This identifier should be agreed upon by producers and consumers of source model metadata. It is not an enumeration to keep the source of model metadata open ended.  E.g. Kubeflow pipelines could use `pipelines` to identify models it produces.
+	ModelSourceKind *string `json:"modelSourceKind,omitempty"`
+	// A subgroup within the source kind. It is a specific sub-component or instance within the source kind. E.g. `pipelinerun` for a Kubeflow pipeline run.
+	ModelSourceClass *string `json:"modelSourceClass,omitempty"`
+	// Unique identifier for a source group for models from source class.  It maps to a physical group of source models.  E.g. a Kubernetes namespace where the pipeline run was executed.
+	ModelSourceGroup *string `json:"modelSourceGroup,omitempty"`
+	// A unique identifier for a source model within kind, class, and group. It should be a url friendly string if source supports using URLs to locate source models. E.g. a pipeline run ID.
+	ModelSourceId *string `json:"modelSourceId,omitempty"`
+	// A human-readable name for the source model.  E.g. `my-project/1`, `ibm-granite/granite-3.1-8b-base:2.1.2`.
+	ModelSourceName *string `json:"modelSourceName,omitempty"`
+	// The uniform resource identifier of the physical artifact. May be empty if there is no physical artifact.
+	Uri   *string        `json:"uri,omitempty"`
+	State *ArtifactState `json:"state,omitempty"`
 }
 
 // NewModelArtifact instantiates a new ModelArtifact object
@@ -55,10 +65,10 @@ type ModelArtifact struct {
 // will change when the set of required properties is changed
 func NewModelArtifact() *ModelArtifact {
 	this := ModelArtifact{}
-	var state ArtifactState = ARTIFACTSTATE_UNKNOWN
-	this.State = &state
 	var artifactType string = "model-artifact"
 	this.ArtifactType = &artifactType
+	var state ArtifactState = ARTIFACTSTATE_UNKNOWN
+	this.State = &state
 	return &this
 }
 
@@ -67,10 +77,10 @@ func NewModelArtifact() *ModelArtifact {
 // but it doesn't guarantee that properties required by API are set
 func NewModelArtifactWithDefaults() *ModelArtifact {
 	this := ModelArtifact{}
-	var state ArtifactState = ARTIFACTSTATE_UNKNOWN
-	this.State = &state
 	var artifactType string = "model-artifact"
 	this.ArtifactType = &artifactType
+	var state ArtifactState = ARTIFACTSTATE_UNKNOWN
+	this.State = &state
 	return &this
 }
 
@@ -168,70 +178,6 @@ func (o *ModelArtifact) HasExternalId() bool {
 // SetExternalId gets a reference to the given string and assigns it to the ExternalId field.
 func (o *ModelArtifact) SetExternalId(v string) {
 	o.ExternalId = &v
-}
-
-// GetUri returns the Uri field value if set, zero value otherwise.
-func (o *ModelArtifact) GetUri() string {
-	if o == nil || IsNil(o.Uri) {
-		var ret string
-		return ret
-	}
-	return *o.Uri
-}
-
-// GetUriOk returns a tuple with the Uri field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *ModelArtifact) GetUriOk() (*string, bool) {
-	if o == nil || IsNil(o.Uri) {
-		return nil, false
-	}
-	return o.Uri, true
-}
-
-// HasUri returns a boolean if a field has been set.
-func (o *ModelArtifact) HasUri() bool {
-	if o != nil && !IsNil(o.Uri) {
-		return true
-	}
-
-	return false
-}
-
-// SetUri gets a reference to the given string and assigns it to the Uri field.
-func (o *ModelArtifact) SetUri(v string) {
-	o.Uri = &v
-}
-
-// GetState returns the State field value if set, zero value otherwise.
-func (o *ModelArtifact) GetState() ArtifactState {
-	if o == nil || IsNil(o.State) {
-		var ret ArtifactState
-		return ret
-	}
-	return *o.State
-}
-
-// GetStateOk returns a tuple with the State field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *ModelArtifact) GetStateOk() (*ArtifactState, bool) {
-	if o == nil || IsNil(o.State) {
-		return nil, false
-	}
-	return o.State, true
-}
-
-// HasState returns a boolean if a field has been set.
-func (o *ModelArtifact) HasState() bool {
-	if o != nil && !IsNil(o.State) {
-		return true
-	}
-
-	return false
-}
-
-// SetState gets a reference to the given ArtifactState and assigns it to the State field.
-func (o *ModelArtifact) SetState(v ArtifactState) {
-	o.State = &v
 }
 
 // GetName returns the Name field value if set, zero value otherwise.
@@ -554,6 +500,230 @@ func (o *ModelArtifact) SetServiceAccountName(v string) {
 	o.ServiceAccountName = &v
 }
 
+// GetModelSourceKind returns the ModelSourceKind field value if set, zero value otherwise.
+func (o *ModelArtifact) GetModelSourceKind() string {
+	if o == nil || IsNil(o.ModelSourceKind) {
+		var ret string
+		return ret
+	}
+	return *o.ModelSourceKind
+}
+
+// GetModelSourceKindOk returns a tuple with the ModelSourceKind field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetModelSourceKindOk() (*string, bool) {
+	if o == nil || IsNil(o.ModelSourceKind) {
+		return nil, false
+	}
+	return o.ModelSourceKind, true
+}
+
+// HasModelSourceKind returns a boolean if a field has been set.
+func (o *ModelArtifact) HasModelSourceKind() bool {
+	if o != nil && !IsNil(o.ModelSourceKind) {
+		return true
+	}
+
+	return false
+}
+
+// SetModelSourceKind gets a reference to the given string and assigns it to the ModelSourceKind field.
+func (o *ModelArtifact) SetModelSourceKind(v string) {
+	o.ModelSourceKind = &v
+}
+
+// GetModelSourceClass returns the ModelSourceClass field value if set, zero value otherwise.
+func (o *ModelArtifact) GetModelSourceClass() string {
+	if o == nil || IsNil(o.ModelSourceClass) {
+		var ret string
+		return ret
+	}
+	return *o.ModelSourceClass
+}
+
+// GetModelSourceClassOk returns a tuple with the ModelSourceClass field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetModelSourceClassOk() (*string, bool) {
+	if o == nil || IsNil(o.ModelSourceClass) {
+		return nil, false
+	}
+	return o.ModelSourceClass, true
+}
+
+// HasModelSourceClass returns a boolean if a field has been set.
+func (o *ModelArtifact) HasModelSourceClass() bool {
+	if o != nil && !IsNil(o.ModelSourceClass) {
+		return true
+	}
+
+	return false
+}
+
+// SetModelSourceClass gets a reference to the given string and assigns it to the ModelSourceClass field.
+func (o *ModelArtifact) SetModelSourceClass(v string) {
+	o.ModelSourceClass = &v
+}
+
+// GetModelSourceGroup returns the ModelSourceGroup field value if set, zero value otherwise.
+func (o *ModelArtifact) GetModelSourceGroup() string {
+	if o == nil || IsNil(o.ModelSourceGroup) {
+		var ret string
+		return ret
+	}
+	return *o.ModelSourceGroup
+}
+
+// GetModelSourceGroupOk returns a tuple with the ModelSourceGroup field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetModelSourceGroupOk() (*string, bool) {
+	if o == nil || IsNil(o.ModelSourceGroup) {
+		return nil, false
+	}
+	return o.ModelSourceGroup, true
+}
+
+// HasModelSourceGroup returns a boolean if a field has been set.
+func (o *ModelArtifact) HasModelSourceGroup() bool {
+	if o != nil && !IsNil(o.ModelSourceGroup) {
+		return true
+	}
+
+	return false
+}
+
+// SetModelSourceGroup gets a reference to the given string and assigns it to the ModelSourceGroup field.
+func (o *ModelArtifact) SetModelSourceGroup(v string) {
+	o.ModelSourceGroup = &v
+}
+
+// GetModelSourceId returns the ModelSourceId field value if set, zero value otherwise.
+func (o *ModelArtifact) GetModelSourceId() string {
+	if o == nil || IsNil(o.ModelSourceId) {
+		var ret string
+		return ret
+	}
+	return *o.ModelSourceId
+}
+
+// GetModelSourceIdOk returns a tuple with the ModelSourceId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetModelSourceIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ModelSourceId) {
+		return nil, false
+	}
+	return o.ModelSourceId, true
+}
+
+// HasModelSourceId returns a boolean if a field has been set.
+func (o *ModelArtifact) HasModelSourceId() bool {
+	if o != nil && !IsNil(o.ModelSourceId) {
+		return true
+	}
+
+	return false
+}
+
+// SetModelSourceId gets a reference to the given string and assigns it to the ModelSourceId field.
+func (o *ModelArtifact) SetModelSourceId(v string) {
+	o.ModelSourceId = &v
+}
+
+// GetModelSourceName returns the ModelSourceName field value if set, zero value otherwise.
+func (o *ModelArtifact) GetModelSourceName() string {
+	if o == nil || IsNil(o.ModelSourceName) {
+		var ret string
+		return ret
+	}
+	return *o.ModelSourceName
+}
+
+// GetModelSourceNameOk returns a tuple with the ModelSourceName field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetModelSourceNameOk() (*string, bool) {
+	if o == nil || IsNil(o.ModelSourceName) {
+		return nil, false
+	}
+	return o.ModelSourceName, true
+}
+
+// HasModelSourceName returns a boolean if a field has been set.
+func (o *ModelArtifact) HasModelSourceName() bool {
+	if o != nil && !IsNil(o.ModelSourceName) {
+		return true
+	}
+
+	return false
+}
+
+// SetModelSourceName gets a reference to the given string and assigns it to the ModelSourceName field.
+func (o *ModelArtifact) SetModelSourceName(v string) {
+	o.ModelSourceName = &v
+}
+
+// GetUri returns the Uri field value if set, zero value otherwise.
+func (o *ModelArtifact) GetUri() string {
+	if o == nil || IsNil(o.Uri) {
+		var ret string
+		return ret
+	}
+	return *o.Uri
+}
+
+// GetUriOk returns a tuple with the Uri field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetUriOk() (*string, bool) {
+	if o == nil || IsNil(o.Uri) {
+		return nil, false
+	}
+	return o.Uri, true
+}
+
+// HasUri returns a boolean if a field has been set.
+func (o *ModelArtifact) HasUri() bool {
+	if o != nil && !IsNil(o.Uri) {
+		return true
+	}
+
+	return false
+}
+
+// SetUri gets a reference to the given string and assigns it to the Uri field.
+func (o *ModelArtifact) SetUri(v string) {
+	o.Uri = &v
+}
+
+// GetState returns the State field value if set, zero value otherwise.
+func (o *ModelArtifact) GetState() ArtifactState {
+	if o == nil || IsNil(o.State) {
+		var ret ArtifactState
+		return ret
+	}
+	return *o.State
+}
+
+// GetStateOk returns a tuple with the State field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *ModelArtifact) GetStateOk() (*ArtifactState, bool) {
+	if o == nil || IsNil(o.State) {
+		return nil, false
+	}
+	return o.State, true
+}
+
+// HasState returns a boolean if a field has been set.
+func (o *ModelArtifact) HasState() bool {
+	if o != nil && !IsNil(o.State) {
+		return true
+	}
+
+	return false
+}
+
+// SetState gets a reference to the given ArtifactState and assigns it to the State field.
+func (o *ModelArtifact) SetState(v ArtifactState) {
+	o.State = &v
+}
+
 func (o ModelArtifact) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
@@ -572,12 +742,6 @@ func (o ModelArtifact) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.ExternalId) {
 		toSerialize["externalId"] = o.ExternalId
-	}
-	if !IsNil(o.Uri) {
-		toSerialize["uri"] = o.Uri
-	}
-	if !IsNil(o.State) {
-		toSerialize["state"] = o.State
 	}
 	if !IsNil(o.Name) {
 		toSerialize["name"] = o.Name
@@ -608,6 +772,27 @@ func (o ModelArtifact) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.ServiceAccountName) {
 		toSerialize["serviceAccountName"] = o.ServiceAccountName
+	}
+	if !IsNil(o.ModelSourceKind) {
+		toSerialize["modelSourceKind"] = o.ModelSourceKind
+	}
+	if !IsNil(o.ModelSourceClass) {
+		toSerialize["modelSourceClass"] = o.ModelSourceClass
+	}
+	if !IsNil(o.ModelSourceGroup) {
+		toSerialize["modelSourceGroup"] = o.ModelSourceGroup
+	}
+	if !IsNil(o.ModelSourceId) {
+		toSerialize["modelSourceId"] = o.ModelSourceId
+	}
+	if !IsNil(o.ModelSourceName) {
+		toSerialize["modelSourceName"] = o.ModelSourceName
+	}
+	if !IsNil(o.Uri) {
+		toSerialize["uri"] = o.Uri
+	}
+	if !IsNil(o.State) {
+		toSerialize["state"] = o.State
 	}
 	return toSerialize, nil
 }

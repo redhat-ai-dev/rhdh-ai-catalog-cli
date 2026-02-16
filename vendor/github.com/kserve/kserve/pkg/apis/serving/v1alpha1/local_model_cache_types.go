@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -32,13 +34,11 @@ type LocalModelCacheSpec struct {
 	// group of nodes to cache the model on.
 	// Todo: support more than 1 node groups
 	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=1
 	NodeGroups []string `json:"nodeGroups" validate:"required"`
 }
 
 // LocalModelCache
 // +k8s:openapi-gen=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +genclient
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
@@ -54,7 +54,6 @@ type LocalModelCache struct {
 // LocalModelCacheList
 // +k8s:openapi-gen=true
 // +kubebuilder:object:root=true
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type LocalModelCacheList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -63,4 +62,21 @@ type LocalModelCacheList struct {
 
 func init() {
 	SchemeBuilder.Register(&LocalModelCache{}, &LocalModelCacheList{})
+}
+
+// If the storageUri from inference service matches the sourceModelUri of the LocalModelCache or is a subdirectory of the sourceModelUri, return true
+func (spec *LocalModelCacheSpec) MatchStorageURI(storageUri string) bool {
+	cachedUri := strings.TrimSuffix(spec.SourceModelUri, "/")
+	isvcStorageUri := strings.TrimSuffix(storageUri, "/")
+	if strings.HasPrefix(isvcStorageUri, cachedUri) {
+		if len(isvcStorageUri) == len(cachedUri) {
+			return true
+		}
+
+		// If the storageUri is a subdirectory of the cachedUri, the next character after the cachedUri should be a "/"
+		if len(cachedUri) < len(isvcStorageUri) && string(isvcStorageUri[len(cachedUri)]) == "/" {
+			return true
+		}
+	}
+	return false
 }

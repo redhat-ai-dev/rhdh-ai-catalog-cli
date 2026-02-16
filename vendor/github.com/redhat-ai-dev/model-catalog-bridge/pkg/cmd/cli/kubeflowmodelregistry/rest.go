@@ -1,21 +1,23 @@
 package kubeflowmodelregistry
 
 import (
-	"crypto/tls"
-	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kserve"
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/rest"
-	"k8s.io/klog/v2"
-	"os"
+     "crypto/tls"
+     "fmt"
+     "os"
+
+     "github.com/go-resty/resty/v2"
+     "github.com/redhat-ai-dev/model-catalog-bridge/pkg/cmd/cli/kserve"
+     "github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
+     "github.com/redhat-ai-dev/model-catalog-bridge/pkg/rest"
+     "k8s.io/klog/v2"
 )
 
 type KubeFlowRESTClientWrapper struct {
 	RESTClient *resty.Client
-	Config     *config.Config
-	RootURL    string
-	Token      string
+	Config          *config.Config
+	RootRegistryURL string
+    RootCatalogURL  string
+	Token           string
 }
 
 func SetupKubeflowRESTClient(cfg *config.Config) *KubeFlowRESTClientWrapper {
@@ -25,9 +27,10 @@ func SetupKubeflowRESTClient(cfg *config.Config) *KubeFlowRESTClientWrapper {
 		os.Exit(1)
 	}
 	kubeFlowRESTClient := &KubeFlowRESTClientWrapper{
-		Token:      cfg.StoreToken,
-		RootURL:    cfg.StoreURL + rest.KFMR_BASE_URI,
-		RESTClient: cfg.KubeflowRESTClient,
+		Token:           cfg.StoreToken,
+		RootRegistryURL: cfg.StoreURL + rest.KFMR_BASE_URI,
+        RootCatalogURL:  cfg.StoreURL + rest.KRMR_CATALOG_BASE_URI,
+		RESTClient:      cfg.KubeflowRESTClient,
 	}
 	if cfg.KubeflowRESTClient != nil {
 		return kubeFlowRESTClient

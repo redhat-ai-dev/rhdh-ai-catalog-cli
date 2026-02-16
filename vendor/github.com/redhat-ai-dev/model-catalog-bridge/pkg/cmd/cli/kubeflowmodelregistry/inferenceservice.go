@@ -8,7 +8,7 @@ import (
 )
 
 func (k *KubeFlowRESTClientWrapper) ListInferenceServices() ([]openapi.InferenceService, error) {
-	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(rest.LIST_INFERENCE_SERVICES_URI))
+	buf, err := k.getFromModelRegistry(k.RootRegistryURL + fmt.Sprintf(rest.LIST_INFERENCE_SERVICES_URI))
 	if err != nil {
 		return nil, err
 	}

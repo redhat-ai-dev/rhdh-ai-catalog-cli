@@ -38,7 +38,7 @@ func Equal(expected, got interface{}) bool {
 	return reflect.DeepEqual(expected, got)
 }
 
-func AssertContains(t *testing.T, s string, subs []string) {
+func Contains(t *testing.T, s string, subs []string) []string {
 	t.Helper()
 	missing := []string{}
 	for _, sub := range subs {
@@ -46,6 +46,13 @@ func AssertContains(t *testing.T, s string, subs []string) {
 			missing = append(missing, sub)
 		}
 	}
+	return missing
+
+}
+
+func AssertContains(t *testing.T, s string, subs []string) {
+	t.Helper()
+	missing := Contains(t, s, subs)
 	if len(missing) > 0 {
 		t.Errorf("Expected '%s' to be in '%s'", strings.Join(missing, "\n"), s)
 	}

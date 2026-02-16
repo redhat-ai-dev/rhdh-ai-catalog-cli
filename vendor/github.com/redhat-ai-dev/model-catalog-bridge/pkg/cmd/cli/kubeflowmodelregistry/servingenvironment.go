@@ -8,7 +8,7 @@ import (
 )
 
 func (k *KubeFlowRESTClientWrapper) GetServingEnvironment(id string) (*openapi.ServingEnvironment, error) {
-	buf, err := k.getFromModelRegistry(k.RootURL + fmt.Sprintf(rest.GET_SERVING_ENV_URI, id))
+	buf, err := k.getFromModelRegistry(k.RootRegistryURL + fmt.Sprintf(rest.GET_SERVING_ENV_URI, id))
 	if err != nil {
 		return nil, err
 	}

@@ -1,25 +1,25 @@
 package util
 
 import (
-	"fmt"
-	certutil "k8s.io/client-go/util/cert"
-	"k8s.io/klog/v2"
-	"net"
-	"os"
-	"os/user"
-	"path/filepath"
+     "fmt"
+     "os"
+     "os/user"
+     "path/filepath"
 
-	servingset "github.com/kserve/kserve/pkg/client/clientset/versioned"
-	servingv1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
-	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
-	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
+     certutil "k8s.io/client-go/util/cert"
+     "k8s.io/klog/v2"
 
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	appv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	kcmdutil "k8s.io/kubectl/pkg/cmd/util"
+     servingset "github.com/kserve/kserve/pkg/client/clientset/versioned"
+     servingv1beta1 "github.com/kserve/kserve/pkg/client/clientset/versioned/typed/serving/v1beta1"
+     routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
+     "github.com/redhat-ai-dev/model-catalog-bridge/pkg/config"
+
+     "k8s.io/cli-runtime/pkg/genericclioptions"
+     appv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
+     corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+     "k8s.io/client-go/rest"
+     "k8s.io/client-go/tools/clientcmd"
+     kcmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
 
 const (
@@ -178,7 +178,7 @@ func InClusterConfigHackForRHDHSidecars() (*rest.Config, error) {
 	}
 
 	return &rest.Config{
-		Host:            "https://" + net.JoinHostPort(host, port),
+		Host:            fmt.Sprintf("%s:%s", host, port),
 		TLSClientConfig: tlsClientConfig,
 		BearerToken:     token,
 	}, nil

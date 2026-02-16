@@ -2,10 +2,11 @@ package client
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/rest"
 	"github.com/redhat-ai-dev/model-catalog-bridge/pkg/util"
-	"net/http"
 )
 
 type BridgeLocationRESTClient struct {
@@ -27,18 +28,16 @@ func SetupBridgeLocationRESTClient(hostURL, token string) *BridgeLocationRESTCli
 	return b
 }
 
-func (b *BridgeLocationRESTClient) UpsertModel(importKey string, buf []byte) (int, string, *rest.PostBody, error) {
+func (b *BridgeLocationRESTClient) UpsertModel(importKey string, body *rest.PostBody) (int, string, error) {
 	var err error
 	var locationResp *resty.Response
-	body := rest.PostBody{
-		Body: buf,
-	}
+
 	locationResp, err = b.RESTClient.R().SetBody(body).SetAuthToken(b.Token).SetQueryParam(util.KeyQueryParam, importKey).SetHeader("Accept", "application/json").Post(b.UpsertURL)
 	msg := fmt.Sprintf("%#v", locationResp)
 	if err != nil {
-		return http.StatusInternalServerError, msg, &body, err
+		return http.StatusInternalServerError, msg, err
 	}
-	return locationResp.StatusCode(), msg, &body, nil
+	return locationResp.StatusCode(), msg, nil
 }
 
 func (b *BridgeLocationRESTClient) RemoveModel(key string) (int, string, error) {

@@ -20,7 +20,7 @@ var _ MappedNullable = &Metric{}
 // Metric A metric representing a numerical measurement from model training or evaluation.
 type Metric struct {
 	// User provided custom properties which are not defined by its type.
-	CustomProperties *map[string]MetadataValue `json:"customProperties,omitempty"`
+	CustomProperties map[string]MetadataValue `json:"customProperties,omitempty"`
 	// An optional description about the resource.
 	Description *string `json:"description,omitempty"`
 	// The external id that come from the clients’ system. This field is optional. If set, it must be unique among all resources within a database instance.
@@ -33,7 +33,11 @@ type Metric struct {
 	CreateTimeSinceEpoch *string `json:"createTimeSinceEpoch,omitempty"`
 	// Output only. Last update time of the resource since epoch in millisecond since epoch.
 	LastUpdateTimeSinceEpoch *string `json:"lastUpdateTimeSinceEpoch,omitempty"`
-	ArtifactType             *string `json:"artifactType,omitempty"`
+	// Optional id of the experiment that produced this artifact.
+	ExperimentId *string `json:"experimentId,omitempty"`
+	// Optional id of the experiment run that produced this artifact.
+	ExperimentRunId *string `json:"experimentRunId,omitempty"`
+	ArtifactType    *string `json:"artifactType,omitempty"`
 	// The numeric value of the metric.
 	Value *float64 `json:"value,omitempty"`
 	// Unix timestamp in milliseconds when the metric was recorded.
@@ -74,14 +78,14 @@ func (o *Metric) GetCustomProperties() map[string]MetadataValue {
 		var ret map[string]MetadataValue
 		return ret
 	}
-	return *o.CustomProperties
+	return o.CustomProperties
 }
 
 // GetCustomPropertiesOk returns a tuple with the CustomProperties field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Metric) GetCustomPropertiesOk() (*map[string]MetadataValue, bool) {
+func (o *Metric) GetCustomPropertiesOk() (map[string]MetadataValue, bool) {
 	if o == nil || IsNil(o.CustomProperties) {
-		return nil, false
+		return map[string]MetadataValue{}, false
 	}
 	return o.CustomProperties, true
 }
@@ -97,7 +101,7 @@ func (o *Metric) HasCustomProperties() bool {
 
 // SetCustomProperties gets a reference to the given map[string]MetadataValue and assigns it to the CustomProperties field.
 func (o *Metric) SetCustomProperties(v map[string]MetadataValue) {
-	o.CustomProperties = &v
+	o.CustomProperties = v
 }
 
 // GetDescription returns the Description field value if set, zero value otherwise.
@@ -292,6 +296,70 @@ func (o *Metric) SetLastUpdateTimeSinceEpoch(v string) {
 	o.LastUpdateTimeSinceEpoch = &v
 }
 
+// GetExperimentId returns the ExperimentId field value if set, zero value otherwise.
+func (o *Metric) GetExperimentId() string {
+	if o == nil || IsNil(o.ExperimentId) {
+		var ret string
+		return ret
+	}
+	return *o.ExperimentId
+}
+
+// GetExperimentIdOk returns a tuple with the ExperimentId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Metric) GetExperimentIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExperimentId) {
+		return nil, false
+	}
+	return o.ExperimentId, true
+}
+
+// HasExperimentId returns a boolean if a field has been set.
+func (o *Metric) HasExperimentId() bool {
+	if o != nil && !IsNil(o.ExperimentId) {
+		return true
+	}
+
+	return false
+}
+
+// SetExperimentId gets a reference to the given string and assigns it to the ExperimentId field.
+func (o *Metric) SetExperimentId(v string) {
+	o.ExperimentId = &v
+}
+
+// GetExperimentRunId returns the ExperimentRunId field value if set, zero value otherwise.
+func (o *Metric) GetExperimentRunId() string {
+	if o == nil || IsNil(o.ExperimentRunId) {
+		var ret string
+		return ret
+	}
+	return *o.ExperimentRunId
+}
+
+// GetExperimentRunIdOk returns a tuple with the ExperimentRunId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *Metric) GetExperimentRunIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExperimentRunId) {
+		return nil, false
+	}
+	return o.ExperimentRunId, true
+}
+
+// HasExperimentRunId returns a boolean if a field has been set.
+func (o *Metric) HasExperimentRunId() bool {
+	if o != nil && !IsNil(o.ExperimentRunId) {
+		return true
+	}
+
+	return false
+}
+
+// SetExperimentRunId gets a reference to the given string and assigns it to the ExperimentRunId field.
+func (o *Metric) SetExperimentRunId(v string) {
+	o.ExperimentRunId = &v
+}
+
 // GetArtifactType returns the ArtifactType field value if set, zero value otherwise.
 func (o *Metric) GetArtifactType() string {
 	if o == nil || IsNil(o.ArtifactType) {
@@ -482,6 +550,12 @@ func (o Metric) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.LastUpdateTimeSinceEpoch) {
 		toSerialize["lastUpdateTimeSinceEpoch"] = o.LastUpdateTimeSinceEpoch
+	}
+	if !IsNil(o.ExperimentId) {
+		toSerialize["experimentId"] = o.ExperimentId
+	}
+	if !IsNil(o.ExperimentRunId) {
+		toSerialize["experimentRunId"] = o.ExperimentRunId
 	}
 	if !IsNil(o.ArtifactType) {
 		toSerialize["artifactType"] = o.ArtifactType

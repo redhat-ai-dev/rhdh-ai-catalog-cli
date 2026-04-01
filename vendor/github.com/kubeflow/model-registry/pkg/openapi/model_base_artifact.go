@@ -14,55 +14,50 @@ import (
 	"encoding/json"
 )
 
-// checks if the Experiment type satisfies the MappedNullable interface at compile time
-var _ MappedNullable = &Experiment{}
+// checks if the BaseArtifact type satisfies the MappedNullable interface at compile time
+var _ MappedNullable = &BaseArtifact{}
 
-// Experiment An experiment in model registry. An experiment has ExperimentRun children.
-type Experiment struct {
+// BaseArtifact Base schema for all artifact types with common server generated properties.
+type BaseArtifact struct {
 	// User provided custom properties which are not defined by its type.
 	CustomProperties map[string]MetadataValue `json:"customProperties,omitempty"`
 	// An optional description about the resource.
 	Description *string `json:"description,omitempty"`
 	// The external id that come from the clients’ system. This field is optional. If set, it must be unique among all resources within a database instance.
 	ExternalId *string `json:"externalId,omitempty"`
-	// The client provided name of the experiment. It must be unique among all the Experiments of the same type within a Model Registry instance and cannot be changed once set.
-	Name string `json:"name"`
+	// The client provided name of the artifact. This field is optional. If set, it must be unique among all the artifacts of the same artifact type within a database instance and cannot be changed once set.
+	Name *string `json:"name,omitempty"`
 	// The unique server generated id of the resource.
 	Id *string `json:"id,omitempty"`
 	// Output only. Create time of the resource in millisecond since epoch.
 	CreateTimeSinceEpoch *string `json:"createTimeSinceEpoch,omitempty"`
 	// Output only. Last update time of the resource since epoch in millisecond since epoch.
-	LastUpdateTimeSinceEpoch *string          `json:"lastUpdateTimeSinceEpoch,omitempty"`
-	Owner                    *string          `json:"owner,omitempty"`
-	State                    *ExperimentState `json:"state,omitempty"`
+	LastUpdateTimeSinceEpoch *string `json:"lastUpdateTimeSinceEpoch,omitempty"`
+	// Optional id of the experiment that produced this artifact.
+	ExperimentId *string `json:"experimentId,omitempty"`
+	// Optional id of the experiment run that produced this artifact.
+	ExperimentRunId *string `json:"experimentRunId,omitempty"`
 }
 
-type _Experiment Experiment
-
-// NewExperiment instantiates a new Experiment object
+// NewBaseArtifact instantiates a new BaseArtifact object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewExperiment(name string) *Experiment {
-	this := Experiment{}
-	this.Name = name
-	var state ExperimentState = EXPERIMENTSTATE_LIVE
-	this.State = &state
+func NewBaseArtifact() *BaseArtifact {
+	this := BaseArtifact{}
 	return &this
 }
 
-// NewExperimentWithDefaults instantiates a new Experiment object
+// NewBaseArtifactWithDefaults instantiates a new BaseArtifact object
 // This constructor will only assign default values to properties that have it defined,
 // but it doesn't guarantee that properties required by API are set
-func NewExperimentWithDefaults() *Experiment {
-	this := Experiment{}
-	var state ExperimentState = EXPERIMENTSTATE_LIVE
-	this.State = &state
+func NewBaseArtifactWithDefaults() *BaseArtifact {
+	this := BaseArtifact{}
 	return &this
 }
 
 // GetCustomProperties returns the CustomProperties field value if set, zero value otherwise.
-func (o *Experiment) GetCustomProperties() map[string]MetadataValue {
+func (o *BaseArtifact) GetCustomProperties() map[string]MetadataValue {
 	if o == nil || IsNil(o.CustomProperties) {
 		var ret map[string]MetadataValue
 		return ret
@@ -72,7 +67,7 @@ func (o *Experiment) GetCustomProperties() map[string]MetadataValue {
 
 // GetCustomPropertiesOk returns a tuple with the CustomProperties field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetCustomPropertiesOk() (map[string]MetadataValue, bool) {
+func (o *BaseArtifact) GetCustomPropertiesOk() (map[string]MetadataValue, bool) {
 	if o == nil || IsNil(o.CustomProperties) {
 		return map[string]MetadataValue{}, false
 	}
@@ -80,7 +75,7 @@ func (o *Experiment) GetCustomPropertiesOk() (map[string]MetadataValue, bool) {
 }
 
 // HasCustomProperties returns a boolean if a field has been set.
-func (o *Experiment) HasCustomProperties() bool {
+func (o *BaseArtifact) HasCustomProperties() bool {
 	if o != nil && !IsNil(o.CustomProperties) {
 		return true
 	}
@@ -89,12 +84,12 @@ func (o *Experiment) HasCustomProperties() bool {
 }
 
 // SetCustomProperties gets a reference to the given map[string]MetadataValue and assigns it to the CustomProperties field.
-func (o *Experiment) SetCustomProperties(v map[string]MetadataValue) {
+func (o *BaseArtifact) SetCustomProperties(v map[string]MetadataValue) {
 	o.CustomProperties = v
 }
 
 // GetDescription returns the Description field value if set, zero value otherwise.
-func (o *Experiment) GetDescription() string {
+func (o *BaseArtifact) GetDescription() string {
 	if o == nil || IsNil(o.Description) {
 		var ret string
 		return ret
@@ -104,7 +99,7 @@ func (o *Experiment) GetDescription() string {
 
 // GetDescriptionOk returns a tuple with the Description field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetDescriptionOk() (*string, bool) {
+func (o *BaseArtifact) GetDescriptionOk() (*string, bool) {
 	if o == nil || IsNil(o.Description) {
 		return nil, false
 	}
@@ -112,7 +107,7 @@ func (o *Experiment) GetDescriptionOk() (*string, bool) {
 }
 
 // HasDescription returns a boolean if a field has been set.
-func (o *Experiment) HasDescription() bool {
+func (o *BaseArtifact) HasDescription() bool {
 	if o != nil && !IsNil(o.Description) {
 		return true
 	}
@@ -121,12 +116,12 @@ func (o *Experiment) HasDescription() bool {
 }
 
 // SetDescription gets a reference to the given string and assigns it to the Description field.
-func (o *Experiment) SetDescription(v string) {
+func (o *BaseArtifact) SetDescription(v string) {
 	o.Description = &v
 }
 
 // GetExternalId returns the ExternalId field value if set, zero value otherwise.
-func (o *Experiment) GetExternalId() string {
+func (o *BaseArtifact) GetExternalId() string {
 	if o == nil || IsNil(o.ExternalId) {
 		var ret string
 		return ret
@@ -136,7 +131,7 @@ func (o *Experiment) GetExternalId() string {
 
 // GetExternalIdOk returns a tuple with the ExternalId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetExternalIdOk() (*string, bool) {
+func (o *BaseArtifact) GetExternalIdOk() (*string, bool) {
 	if o == nil || IsNil(o.ExternalId) {
 		return nil, false
 	}
@@ -144,7 +139,7 @@ func (o *Experiment) GetExternalIdOk() (*string, bool) {
 }
 
 // HasExternalId returns a boolean if a field has been set.
-func (o *Experiment) HasExternalId() bool {
+func (o *BaseArtifact) HasExternalId() bool {
 	if o != nil && !IsNil(o.ExternalId) {
 		return true
 	}
@@ -153,36 +148,44 @@ func (o *Experiment) HasExternalId() bool {
 }
 
 // SetExternalId gets a reference to the given string and assigns it to the ExternalId field.
-func (o *Experiment) SetExternalId(v string) {
+func (o *BaseArtifact) SetExternalId(v string) {
 	o.ExternalId = &v
 }
 
-// GetName returns the Name field value
-func (o *Experiment) GetName() string {
-	if o == nil {
+// GetName returns the Name field value if set, zero value otherwise.
+func (o *BaseArtifact) GetName() string {
+	if o == nil || IsNil(o.Name) {
 		var ret string
 		return ret
 	}
-
-	return o.Name
+	return *o.Name
 }
 
-// GetNameOk returns a tuple with the Name field value
+// GetNameOk returns a tuple with the Name field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetNameOk() (*string, bool) {
-	if o == nil {
+func (o *BaseArtifact) GetNameOk() (*string, bool) {
+	if o == nil || IsNil(o.Name) {
 		return nil, false
 	}
-	return &o.Name, true
+	return o.Name, true
 }
 
-// SetName sets field value
-func (o *Experiment) SetName(v string) {
-	o.Name = v
+// HasName returns a boolean if a field has been set.
+func (o *BaseArtifact) HasName() bool {
+	if o != nil && !IsNil(o.Name) {
+		return true
+	}
+
+	return false
+}
+
+// SetName gets a reference to the given string and assigns it to the Name field.
+func (o *BaseArtifact) SetName(v string) {
+	o.Name = &v
 }
 
 // GetId returns the Id field value if set, zero value otherwise.
-func (o *Experiment) GetId() string {
+func (o *BaseArtifact) GetId() string {
 	if o == nil || IsNil(o.Id) {
 		var ret string
 		return ret
@@ -192,7 +195,7 @@ func (o *Experiment) GetId() string {
 
 // GetIdOk returns a tuple with the Id field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetIdOk() (*string, bool) {
+func (o *BaseArtifact) GetIdOk() (*string, bool) {
 	if o == nil || IsNil(o.Id) {
 		return nil, false
 	}
@@ -200,7 +203,7 @@ func (o *Experiment) GetIdOk() (*string, bool) {
 }
 
 // HasId returns a boolean if a field has been set.
-func (o *Experiment) HasId() bool {
+func (o *BaseArtifact) HasId() bool {
 	if o != nil && !IsNil(o.Id) {
 		return true
 	}
@@ -209,12 +212,12 @@ func (o *Experiment) HasId() bool {
 }
 
 // SetId gets a reference to the given string and assigns it to the Id field.
-func (o *Experiment) SetId(v string) {
+func (o *BaseArtifact) SetId(v string) {
 	o.Id = &v
 }
 
 // GetCreateTimeSinceEpoch returns the CreateTimeSinceEpoch field value if set, zero value otherwise.
-func (o *Experiment) GetCreateTimeSinceEpoch() string {
+func (o *BaseArtifact) GetCreateTimeSinceEpoch() string {
 	if o == nil || IsNil(o.CreateTimeSinceEpoch) {
 		var ret string
 		return ret
@@ -224,7 +227,7 @@ func (o *Experiment) GetCreateTimeSinceEpoch() string {
 
 // GetCreateTimeSinceEpochOk returns a tuple with the CreateTimeSinceEpoch field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetCreateTimeSinceEpochOk() (*string, bool) {
+func (o *BaseArtifact) GetCreateTimeSinceEpochOk() (*string, bool) {
 	if o == nil || IsNil(o.CreateTimeSinceEpoch) {
 		return nil, false
 	}
@@ -232,7 +235,7 @@ func (o *Experiment) GetCreateTimeSinceEpochOk() (*string, bool) {
 }
 
 // HasCreateTimeSinceEpoch returns a boolean if a field has been set.
-func (o *Experiment) HasCreateTimeSinceEpoch() bool {
+func (o *BaseArtifact) HasCreateTimeSinceEpoch() bool {
 	if o != nil && !IsNil(o.CreateTimeSinceEpoch) {
 		return true
 	}
@@ -241,12 +244,12 @@ func (o *Experiment) HasCreateTimeSinceEpoch() bool {
 }
 
 // SetCreateTimeSinceEpoch gets a reference to the given string and assigns it to the CreateTimeSinceEpoch field.
-func (o *Experiment) SetCreateTimeSinceEpoch(v string) {
+func (o *BaseArtifact) SetCreateTimeSinceEpoch(v string) {
 	o.CreateTimeSinceEpoch = &v
 }
 
 // GetLastUpdateTimeSinceEpoch returns the LastUpdateTimeSinceEpoch field value if set, zero value otherwise.
-func (o *Experiment) GetLastUpdateTimeSinceEpoch() string {
+func (o *BaseArtifact) GetLastUpdateTimeSinceEpoch() string {
 	if o == nil || IsNil(o.LastUpdateTimeSinceEpoch) {
 		var ret string
 		return ret
@@ -256,7 +259,7 @@ func (o *Experiment) GetLastUpdateTimeSinceEpoch() string {
 
 // GetLastUpdateTimeSinceEpochOk returns a tuple with the LastUpdateTimeSinceEpoch field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetLastUpdateTimeSinceEpochOk() (*string, bool) {
+func (o *BaseArtifact) GetLastUpdateTimeSinceEpochOk() (*string, bool) {
 	if o == nil || IsNil(o.LastUpdateTimeSinceEpoch) {
 		return nil, false
 	}
@@ -264,7 +267,7 @@ func (o *Experiment) GetLastUpdateTimeSinceEpochOk() (*string, bool) {
 }
 
 // HasLastUpdateTimeSinceEpoch returns a boolean if a field has been set.
-func (o *Experiment) HasLastUpdateTimeSinceEpoch() bool {
+func (o *BaseArtifact) HasLastUpdateTimeSinceEpoch() bool {
 	if o != nil && !IsNil(o.LastUpdateTimeSinceEpoch) {
 		return true
 	}
@@ -273,75 +276,75 @@ func (o *Experiment) HasLastUpdateTimeSinceEpoch() bool {
 }
 
 // SetLastUpdateTimeSinceEpoch gets a reference to the given string and assigns it to the LastUpdateTimeSinceEpoch field.
-func (o *Experiment) SetLastUpdateTimeSinceEpoch(v string) {
+func (o *BaseArtifact) SetLastUpdateTimeSinceEpoch(v string) {
 	o.LastUpdateTimeSinceEpoch = &v
 }
 
-// GetOwner returns the Owner field value if set, zero value otherwise.
-func (o *Experiment) GetOwner() string {
-	if o == nil || IsNil(o.Owner) {
+// GetExperimentId returns the ExperimentId field value if set, zero value otherwise.
+func (o *BaseArtifact) GetExperimentId() string {
+	if o == nil || IsNil(o.ExperimentId) {
 		var ret string
 		return ret
 	}
-	return *o.Owner
+	return *o.ExperimentId
 }
 
-// GetOwnerOk returns a tuple with the Owner field value if set, nil otherwise
+// GetExperimentIdOk returns a tuple with the ExperimentId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetOwnerOk() (*string, bool) {
-	if o == nil || IsNil(o.Owner) {
+func (o *BaseArtifact) GetExperimentIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExperimentId) {
 		return nil, false
 	}
-	return o.Owner, true
+	return o.ExperimentId, true
 }
 
-// HasOwner returns a boolean if a field has been set.
-func (o *Experiment) HasOwner() bool {
-	if o != nil && !IsNil(o.Owner) {
+// HasExperimentId returns a boolean if a field has been set.
+func (o *BaseArtifact) HasExperimentId() bool {
+	if o != nil && !IsNil(o.ExperimentId) {
 		return true
 	}
 
 	return false
 }
 
-// SetOwner gets a reference to the given string and assigns it to the Owner field.
-func (o *Experiment) SetOwner(v string) {
-	o.Owner = &v
+// SetExperimentId gets a reference to the given string and assigns it to the ExperimentId field.
+func (o *BaseArtifact) SetExperimentId(v string) {
+	o.ExperimentId = &v
 }
 
-// GetState returns the State field value if set, zero value otherwise.
-func (o *Experiment) GetState() ExperimentState {
-	if o == nil || IsNil(o.State) {
-		var ret ExperimentState
+// GetExperimentRunId returns the ExperimentRunId field value if set, zero value otherwise.
+func (o *BaseArtifact) GetExperimentRunId() string {
+	if o == nil || IsNil(o.ExperimentRunId) {
+		var ret string
 		return ret
 	}
-	return *o.State
+	return *o.ExperimentRunId
 }
 
-// GetStateOk returns a tuple with the State field value if set, nil otherwise
+// GetExperimentRunIdOk returns a tuple with the ExperimentRunId field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *Experiment) GetStateOk() (*ExperimentState, bool) {
-	if o == nil || IsNil(o.State) {
+func (o *BaseArtifact) GetExperimentRunIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExperimentRunId) {
 		return nil, false
 	}
-	return o.State, true
+	return o.ExperimentRunId, true
 }
 
-// HasState returns a boolean if a field has been set.
-func (o *Experiment) HasState() bool {
-	if o != nil && !IsNil(o.State) {
+// HasExperimentRunId returns a boolean if a field has been set.
+func (o *BaseArtifact) HasExperimentRunId() bool {
+	if o != nil && !IsNil(o.ExperimentRunId) {
 		return true
 	}
 
 	return false
 }
 
-// SetState gets a reference to the given ExperimentState and assigns it to the State field.
-func (o *Experiment) SetState(v ExperimentState) {
-	o.State = &v
+// SetExperimentRunId gets a reference to the given string and assigns it to the ExperimentRunId field.
+func (o *BaseArtifact) SetExperimentRunId(v string) {
+	o.ExperimentRunId = &v
 }
 
-func (o Experiment) MarshalJSON() ([]byte, error) {
+func (o BaseArtifact) MarshalJSON() ([]byte, error) {
 	toSerialize, err := o.ToMap()
 	if err != nil {
 		return []byte{}, err
@@ -349,7 +352,7 @@ func (o Experiment) MarshalJSON() ([]byte, error) {
 	return json.Marshal(toSerialize)
 }
 
-func (o Experiment) ToMap() (map[string]interface{}, error) {
+func (o BaseArtifact) ToMap() (map[string]interface{}, error) {
 	toSerialize := map[string]interface{}{}
 	if !IsNil(o.CustomProperties) {
 		toSerialize["customProperties"] = o.CustomProperties
@@ -360,7 +363,9 @@ func (o Experiment) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.ExternalId) {
 		toSerialize["externalId"] = o.ExternalId
 	}
-	toSerialize["name"] = o.Name
+	if !IsNil(o.Name) {
+		toSerialize["name"] = o.Name
+	}
 	if !IsNil(o.Id) {
 		toSerialize["id"] = o.Id
 	}
@@ -370,47 +375,47 @@ func (o Experiment) ToMap() (map[string]interface{}, error) {
 	if !IsNil(o.LastUpdateTimeSinceEpoch) {
 		toSerialize["lastUpdateTimeSinceEpoch"] = o.LastUpdateTimeSinceEpoch
 	}
-	if !IsNil(o.Owner) {
-		toSerialize["owner"] = o.Owner
+	if !IsNil(o.ExperimentId) {
+		toSerialize["experimentId"] = o.ExperimentId
 	}
-	if !IsNil(o.State) {
-		toSerialize["state"] = o.State
+	if !IsNil(o.ExperimentRunId) {
+		toSerialize["experimentRunId"] = o.ExperimentRunId
 	}
 	return toSerialize, nil
 }
 
-type NullableExperiment struct {
-	value *Experiment
+type NullableBaseArtifact struct {
+	value *BaseArtifact
 	isSet bool
 }
 
-func (v NullableExperiment) Get() *Experiment {
+func (v NullableBaseArtifact) Get() *BaseArtifact {
 	return v.value
 }
 
-func (v *NullableExperiment) Set(val *Experiment) {
+func (v *NullableBaseArtifact) Set(val *BaseArtifact) {
 	v.value = val
 	v.isSet = true
 }
 
-func (v NullableExperiment) IsSet() bool {
+func (v NullableBaseArtifact) IsSet() bool {
 	return v.isSet
 }
 
-func (v *NullableExperiment) Unset() {
+func (v *NullableBaseArtifact) Unset() {
 	v.value = nil
 	v.isSet = false
 }
 
-func NewNullableExperiment(val *Experiment) *NullableExperiment {
-	return &NullableExperiment{value: val, isSet: true}
+func NewNullableBaseArtifact(val *BaseArtifact) *NullableBaseArtifact {
+	return &NullableBaseArtifact{value: val, isSet: true}
 }
 
-func (v NullableExperiment) MarshalJSON() ([]byte, error) {
+func (v NullableBaseArtifact) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v.value)
 }
 
-func (v *NullableExperiment) UnmarshalJSON(src []byte) error {
+func (v *NullableBaseArtifact) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }

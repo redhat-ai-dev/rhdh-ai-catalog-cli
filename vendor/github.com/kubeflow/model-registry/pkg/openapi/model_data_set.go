@@ -20,7 +20,7 @@ var _ MappedNullable = &DataSet{}
 // DataSet A dataset artifact representing training or test data.
 type DataSet struct {
 	// User provided custom properties which are not defined by its type.
-	CustomProperties *map[string]MetadataValue `json:"customProperties,omitempty"`
+	CustomProperties map[string]MetadataValue `json:"customProperties,omitempty"`
 	// An optional description about the resource.
 	Description *string `json:"description,omitempty"`
 	// The external id that come from the clients’ system. This field is optional. If set, it must be unique among all resources within a database instance.
@@ -33,7 +33,11 @@ type DataSet struct {
 	CreateTimeSinceEpoch *string `json:"createTimeSinceEpoch,omitempty"`
 	// Output only. Last update time of the resource since epoch in millisecond since epoch.
 	LastUpdateTimeSinceEpoch *string `json:"lastUpdateTimeSinceEpoch,omitempty"`
-	ArtifactType             *string `json:"artifactType,omitempty"`
+	// Optional id of the experiment that produced this artifact.
+	ExperimentId *string `json:"experimentId,omitempty"`
+	// Optional id of the experiment run that produced this artifact.
+	ExperimentRunId *string `json:"experimentRunId,omitempty"`
+	ArtifactType    *string `json:"artifactType,omitempty"`
 	// A unique hash or identifier for the dataset content.
 	Digest *string `json:"digest,omitempty"`
 	// The type of data source (e.g., \"s3\", \"hdfs\", \"local\", \"database\").
@@ -80,14 +84,14 @@ func (o *DataSet) GetCustomProperties() map[string]MetadataValue {
 		var ret map[string]MetadataValue
 		return ret
 	}
-	return *o.CustomProperties
+	return o.CustomProperties
 }
 
 // GetCustomPropertiesOk returns a tuple with the CustomProperties field value if set, nil otherwise
 // and a boolean to check if the value has been set.
-func (o *DataSet) GetCustomPropertiesOk() (*map[string]MetadataValue, bool) {
+func (o *DataSet) GetCustomPropertiesOk() (map[string]MetadataValue, bool) {
 	if o == nil || IsNil(o.CustomProperties) {
-		return nil, false
+		return map[string]MetadataValue{}, false
 	}
 	return o.CustomProperties, true
 }
@@ -103,7 +107,7 @@ func (o *DataSet) HasCustomProperties() bool {
 
 // SetCustomProperties gets a reference to the given map[string]MetadataValue and assigns it to the CustomProperties field.
 func (o *DataSet) SetCustomProperties(v map[string]MetadataValue) {
-	o.CustomProperties = &v
+	o.CustomProperties = v
 }
 
 // GetDescription returns the Description field value if set, zero value otherwise.
@@ -296,6 +300,70 @@ func (o *DataSet) HasLastUpdateTimeSinceEpoch() bool {
 // SetLastUpdateTimeSinceEpoch gets a reference to the given string and assigns it to the LastUpdateTimeSinceEpoch field.
 func (o *DataSet) SetLastUpdateTimeSinceEpoch(v string) {
 	o.LastUpdateTimeSinceEpoch = &v
+}
+
+// GetExperimentId returns the ExperimentId field value if set, zero value otherwise.
+func (o *DataSet) GetExperimentId() string {
+	if o == nil || IsNil(o.ExperimentId) {
+		var ret string
+		return ret
+	}
+	return *o.ExperimentId
+}
+
+// GetExperimentIdOk returns a tuple with the ExperimentId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *DataSet) GetExperimentIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExperimentId) {
+		return nil, false
+	}
+	return o.ExperimentId, true
+}
+
+// HasExperimentId returns a boolean if a field has been set.
+func (o *DataSet) HasExperimentId() bool {
+	if o != nil && !IsNil(o.ExperimentId) {
+		return true
+	}
+
+	return false
+}
+
+// SetExperimentId gets a reference to the given string and assigns it to the ExperimentId field.
+func (o *DataSet) SetExperimentId(v string) {
+	o.ExperimentId = &v
+}
+
+// GetExperimentRunId returns the ExperimentRunId field value if set, zero value otherwise.
+func (o *DataSet) GetExperimentRunId() string {
+	if o == nil || IsNil(o.ExperimentRunId) {
+		var ret string
+		return ret
+	}
+	return *o.ExperimentRunId
+}
+
+// GetExperimentRunIdOk returns a tuple with the ExperimentRunId field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *DataSet) GetExperimentRunIdOk() (*string, bool) {
+	if o == nil || IsNil(o.ExperimentRunId) {
+		return nil, false
+	}
+	return o.ExperimentRunId, true
+}
+
+// HasExperimentRunId returns a boolean if a field has been set.
+func (o *DataSet) HasExperimentRunId() bool {
+	if o != nil && !IsNil(o.ExperimentRunId) {
+		return true
+	}
+
+	return false
+}
+
+// SetExperimentRunId gets a reference to the given string and assigns it to the ExperimentRunId field.
+func (o *DataSet) SetExperimentRunId(v string) {
+	o.ExperimentRunId = &v
 }
 
 // GetArtifactType returns the ArtifactType field value if set, zero value otherwise.
@@ -584,6 +652,12 @@ func (o DataSet) ToMap() (map[string]interface{}, error) {
 	}
 	if !IsNil(o.LastUpdateTimeSinceEpoch) {
 		toSerialize["lastUpdateTimeSinceEpoch"] = o.LastUpdateTimeSinceEpoch
+	}
+	if !IsNil(o.ExperimentId) {
+		toSerialize["experimentId"] = o.ExperimentId
+	}
+	if !IsNil(o.ExperimentRunId) {
+		toSerialize["experimentRunId"] = o.ExperimentRunId
 	}
 	if !IsNil(o.ArtifactType) {
 		toSerialize["artifactType"] = o.ArtifactType

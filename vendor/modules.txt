@@ -361,7 +361,7 @@ github.com/kserve/kserve/pkg/utils
 # github.com/kubeflow/model-registry v0.2.22
 ## explicit; go 1.24.4
 github.com/kubeflow/model-registry/catalog/pkg/openapi
-# github.com/kubeflow/model-registry/pkg/openapi v0.0.0 => github.com/kubeflow/model-registry/pkg/openapi v0.0.0-20250814123114-228b62d77e0e
+# github.com/kubeflow/model-registry/pkg/openapi v0.3.7
 ## explicit; go 1.23
 github.com/kubeflow/model-registry/pkg/openapi
 # github.com/leodido/go-urn v1.4.0
@@ -1523,3 +1523,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
 sigs.k8s.io/yaml/goyaml.v3
+# github.com/kubeflow/model-registry/pkg/openapi v0.0.0 => github.com/kubeflow/model-registry/pkg/openapi v0.0.0-20250814123114-228b62d77e0e

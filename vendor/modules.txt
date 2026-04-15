@@ -361,7 +361,7 @@ github.com/kserve/kserve/pkg/utils
 # github.com/kubeflow/model-registry v0.2.22
 ## explicit; go 1.24.4
 github.com/kubeflow/model-registry/catalog/pkg/openapi
-# github.com/kubeflow/model-registry/pkg/openapi v0.3.7
+# github.com/kubeflow/model-registry/pkg/openapi v0.3.8
 ## explicit; go 1.23
 github.com/kubeflow/model-registry/pkg/openapi
 # github.com/leodido/go-urn v1.4.0

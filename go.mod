@@ -10,8 +10,8 @@ require (
 	github.com/redhat-ai-dev/model-catalog-bridge v0.0.0-20260115132128-cbd6808b0b0b
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
-	k8s.io/apimachinery v0.33.3
-	k8s.io/client-go v0.33.3
+	k8s.io/apimachinery v0.36.1
+	k8s.io/client-go v0.36.1
 	k8s.io/klog/v2 v2.140.0
 	knative.dev/pkg v0.0.0-20250117084104-c43477f0052b
 )
